@@ -4,8 +4,8 @@ import com.github.zubtsov.spark.enums.ColumnPosition.ColumnPosition
 import com.github.zubtsov.spark.enums.UnionStrategy.UnionStrategy
 import com.github.zubtsov.spark.enums.{ColumnPosition, UnionStrategy}
 import com.github.zubtsov.spark.zubtsov.{areStringsEqual, defaultCaseSensitivity}
-import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{Column, DataFrame}
 
 /**
  * Miscellaneous unclassified functions

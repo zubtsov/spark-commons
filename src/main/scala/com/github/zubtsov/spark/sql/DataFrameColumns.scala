@@ -2,7 +2,7 @@ package com.github.zubtsov.spark.sql
 
 import com.github.zubtsov.spark.zubtsov.defaultCaseSensitivity
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.types.{BinaryType, BooleanType, ByteType, CalendarIntervalType, DateType, DecimalType, DoubleType, FloatType, IntegerType, LongType, NullType, ShortType, StringType, StructField, TimestampType}
+import org.apache.spark.sql.types._
 
 object DataFrameColumns {
 

@@ -1,9 +1,9 @@
 package com.github.zubtsov.spark.sql
 
 import com.github.zubtsov.spark.zubtsov.{areStringsEqual, defaultCaseSensitivity}
-import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StringType
+import org.apache.spark.sql.{Column, DataFrame}
 
 /**
  * typical column operations performed on multiple columns at once

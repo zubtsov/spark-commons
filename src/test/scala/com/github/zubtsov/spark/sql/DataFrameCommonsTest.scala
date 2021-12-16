@@ -1,8 +1,8 @@
 package com.github.zubtsov.spark.sql
 
+import com.github.zubtsov.spark.DataFrameComparison._
 import com.github.zubtsov.spark.SparkSessionCommons.implicits._
 import org.apache.spark.sql.Row
-import com.github.zubtsov.spark.DataFrameComparison._
 
 class DataFrameCommonsTest extends SparkFunSuite {
   test("Unpivot test") {

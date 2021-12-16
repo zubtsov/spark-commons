@@ -3,8 +3,8 @@ package com.github.zubtsov.spark.sql
 import com.github.zubtsov.spark.exception.UnknownColumnsException
 import com.github.zubtsov.spark.zubtsov.{areStringsEqual, defaultCaseSensitivity}
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StructType
 
 object DataFrameSchemaManipulations {
   private val unicodeWhitespaceRegex = "^[\\p{Z}\\p{C}]+|[\\p{Z}\\p{C}]+$"
