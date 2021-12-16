@@ -3,6 +3,7 @@ package com.github.zubtsov.spark.sql
 import com.github.zubtsov.spark.enums.ColumnPosition.ColumnPosition
 import com.github.zubtsov.spark.enums.UnionStrategy.UnionStrategy
 import com.github.zubtsov.spark.enums.{ColumnPosition, UnionStrategy}
+import com.github.zubtsov.spark.exception.ColumnAlreadyExistsException
 import com.github.zubtsov.spark.zubtsov.{areStringsEqual, defaultCaseSensitivity}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Column, DataFrame}
@@ -13,28 +14,53 @@ import org.apache.spark.sql.{Column, DataFrame}
 object DataFrameCommons {
 
   object implicits {
+
     implicit class DataFrameCommonsImpl(df: DataFrame) {
+      /**
+       * A more readable and meaningful (comparing to the exclamation sign) method for non-emptiness check
+       * @return
+       */
       def isNotEmpty(): Boolean = {
         !df.isEmpty
       }
 
+      /**
+       * A more readable and meaningful method (comparing to the exclamation sign) for non-emptiness check
+       * @return
+       */
       def nonEmpty(): Boolean = {
         !df.isEmpty
       }
 
-      def sample(withReplacement: Boolean, numRows: Int, seed: Long): DataFrame = {
+      /**
+       * A counterpart of the [[DataFrame]]'s sample() method
+       * @return
+       */
+      def sample2(withReplacement: Boolean, numRows: Int, seed: Long): DataFrame = {
         df.sample(withReplacement, calculateFraction(numRows), seed).limit(numRows)
       }
 
-      def sample(numRows: Int, seed: Long): DataFrame = {
+      /**
+       * A counterpart of the [[DataFrame]]'s sample() method
+       * @return
+       */
+      def sample2(numRows: Int, seed: Long): DataFrame = {
         df.sample(calculateFraction(numRows), seed).limit(numRows)
       }
 
-      def sample(withReplacement: Boolean, numRows: Int): DataFrame = {
+      /**
+       * A counterpart of the [[DataFrame]]'s sample() method
+       * @return
+       */
+      def sample2(withReplacement: Boolean, numRows: Int): DataFrame = {
         df.sample(withReplacement, calculateFraction(numRows)).limit(numRows)
       }
 
-      def sample(numRows: Int): DataFrame = {
+      /**
+       * A counterpart of the [[DataFrame]]'s sample() method
+       * @return
+       */
+      def sample2(numRows: Int): DataFrame = {
         df.sample(calculateFraction(numRows)).limit(numRows)
       }
 
@@ -56,15 +82,16 @@ object DataFrameCommons {
                        caseSensitive: Boolean = defaultCaseSensitivity
                      ): DataFrame = {
         val colExists = df.columns.exists(cn => areStringsEqual(caseSensitive)(cn, colName))
-        if (colExists && replaceIfExists) {
-          if (pos == ColumnPosition.Tail) {
-            df.withColumn(colName, colValue)
-          } else {
-            df.withColumn(colName, colValue)
-              .select(colName, df.columns: _*)
-          }
+
+        if (colExists && !replaceIfExists) {
+          throw ColumnAlreadyExistsException(colName)
+        }
+
+        if (pos == ColumnPosition.Tail) {
+          df.withColumn(colName, colValue)
         } else {
-          df
+          df.withColumn(colName, colValue)
+            .select(colName, df.columns: _*)
         }
       }
 
@@ -80,16 +107,18 @@ object DataFrameCommons {
                  unionStrategy: UnionStrategy = UnionStrategy.AllColumns,
                  caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
         val left = df
-        val commonColumns = left.columns.filter(cn => right.columns.exists(cn2 => areStringsEqual(caseSensitive)(cn, cn2)))
-        val leftOnlyColumns = left.columns.filter(cn => !right.columns.exists(cn2 => areStringsEqual(caseSensitive)(cn, cn2)))
-        val rightOnlyColumns = right.columns.filter(cn => !left.columns.exists(cn2 => areStringsEqual(caseSensitive)(cn, cn2)))
-        val leftWithEmptyRightCols = left.select(commonColumns.map(col) ++ rightOnlyColumns.map(lit(null).as(_)): _*)
-        val rightWithEmptyLeftCols = right.select(commonColumns.map(col) ++ leftOnlyColumns.map(lit(null).as(_)): _*)
+        lazy val commonColumns = left.columns.filter(cn => right.columns.exists(cn2 => areStringsEqual(caseSensitive)(cn, cn2)))
+        lazy val leftOnlyColumns = left.columns.filter(cn => !right.columns.exists(cn2 => areStringsEqual(caseSensitive)(cn, cn2)))
+        lazy val rightOnlyColumns = right.columns.filter(cn => !left.columns.exists(cn2 => areStringsEqual(caseSensitive)(cn, cn2)))
+        lazy val leftWithEmptyRightCols = left.select((leftOnlyColumns ++ commonColumns).map(col) ++ rightOnlyColumns.map(lit(null).as(_)): _*)
+        lazy val rightWithEmptyLeftCols = right.select((rightOnlyColumns ++ commonColumns).map(col) ++ leftOnlyColumns.map(lit(null).as(_)): _*)
+        lazy val leftCommonWithEmptyRightCols = left.select(commonColumns.map(col) ++ rightOnlyColumns.map(lit(null).as(_)): _*)
+        lazy val rightCommonWithEmptyLeftCols = right.select(commonColumns.map(col) ++ leftOnlyColumns.map(lit(null).as(_)): _*)
         unionStrategy match {
           case UnionStrategy.AllColumns => leftWithEmptyRightCols unionByName rightWithEmptyLeftCols
           case UnionStrategy.CommonColumns => left.select(commonColumns.map(col): _*) unionByName right.select(commonColumns.map(col): _*)
-          case UnionStrategy.LeftColumns => left unionByName rightWithEmptyLeftCols
-          case UnionStrategy.RightColumns => right unionByName leftWithEmptyRightCols
+          case UnionStrategy.LeftColumns => left unionByName rightCommonWithEmptyLeftCols
+          case UnionStrategy.RightColumns => right unionByName leftCommonWithEmptyRightCols
         }
       }
 
@@ -128,6 +157,26 @@ object DataFrameCommons {
         val notUnpivotedCol = (cn: String) => !columns.exists(areStringsEqual(caseSensitive)(cn, _))
 
         val remainingCols = df.columns.filter(notUnpivotedCol).map(col)
+        val unpivotExpr = explode(map(columns.flatMap(c => Seq(lit(c), col(c))):_*)).as(Seq(nameColumn, valueColumn))
+        df.select(remainingCols :+ unpivotExpr: _*)
+      }
+
+      /**
+       * Turns specified columns into rows
+       *
+       * @param columns
+       * @param nameColumn
+       * @param valueColumn
+       * @param caseSensitive
+       * @return
+       */
+      def unpivot2(columns: Seq[String],
+                  nameColumn: String = "name",
+                  valueColumn: String = "value",
+                  caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
+        val notUnpivotedCol = (cn: String) => !columns.exists(areStringsEqual(caseSensitive)(cn, _))
+
+        val remainingCols = df.columns.filter(notUnpivotedCol).map(col)
         val unpivotedColsExpr = columns.map(cn => s"'${cn}', ${cn}").mkString(", ")
         val unpivotExpr = expr(s"stack(${columns.length}, ${unpivotedColsExpr}) as (${nameColumn}, ${valueColumn})")
         df.select(remainingCols :+ unpivotExpr: _*)
@@ -136,8 +185,13 @@ object DataFrameCommons {
       //TODO: implement transpose function (like matrix transposition)
 
       private def calculateFraction(numRows: Int): Double = {
-        val fraction = df.count().asInstanceOf[Double] / (numRows + 1)
-        fraction
+        val tableSize = df.count().asInstanceOf[Double]
+        if (numRows < tableSize - 1) {
+          val fraction = (numRows + 1) / tableSize
+          fraction
+        } else {
+          1
+        }
       }
     }
   }

@@ -6,6 +6,9 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{StructField, StructType}
 
+//TODO: add approximate comparison of double values with some epsilon
+//TODO: add contains all rows method
+//TODO: add contains any row
 /**
  * Utility object to compare [[org.apache.spark.sql.DataFrame]]s' columns, schemas and data
  */

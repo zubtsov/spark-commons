@@ -10,43 +10,46 @@ import org.apache.spark.sql.{Column, DataFrame}
  */
 object DataFrameBulkColumnOperations {
 
-  implicit class DataFrameBulkColumnOperations(df: DataFrame) {
+  object implicits {
 
-    import com.github.zubtsov.spark.sql.DataFrameColumns.implicits._
+    implicit class DataFrameBulkColumnOperationsImpl(df: DataFrame) {
 
-    def trimStrings(colNames: Seq[String] = df.stringColumns, caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
-      transformStrings(colNames, caseSensitive, cn => trim(col(cn)))
-    }
+      import com.github.zubtsov.spark.sql.DataFrameColumns.implicits._
 
-    def cutStrings(colNames: Seq[String],
-                   maximumLength: Int,
-                   caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
-      transformStrings(colNames, caseSensitive, cn => substring(col(cn), 0, maximumLength))
-    }
-
-    def cutStrings2(colNameToMaxLength: Map[String, Int], caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
-      val loweredColNameToMaxLength = if (caseSensitive) colNameToMaxLength else colNameToMaxLength.map(t => t.copy(t._1.toLowerCase))
-      val f = (cn: String) => {
-        val colName = if (caseSensitive) cn else cn.toLowerCase
-        substring(col(cn), 0, loweredColNameToMaxLength(colName))
+      def trimStrings(colNames: Seq[String] = df.stringColumns, caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
+        transformStrings(colNames, caseSensitive, cn => trim(col(cn)))
       }
-      transformStrings(colNameToMaxLength.keys.toSeq, caseSensitive, f)
-    }
 
-    def regexpReplace(pattern: String,
-                      replacement: String,
-                      colNames: Seq[String],
-                      caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
-      transformStrings(colNames, caseSensitive, cn => regexp_replace(col(cn), pattern, replacement))
-    }
+      def cutStrings(colNames: Seq[String],
+                     maximumLength: Int,
+                     caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
+        transformStrings(colNames, caseSensitive, cn => substring(col(cn), 0, maximumLength))
+      }
 
-    private def transformStrings(colNames: Seq[String] = df.stringColumns, caseSensitive: Boolean = defaultCaseSensitivity, f: String => Column) = {
-      val sc: (String, String) => Boolean = areStringsEqual(caseSensitive)
-      val colsToSelect = df.schema.map(sf => sf.dataType match {
-        case StringType if colNames.exists(cn => sc(cn, sf.name)) => f(sf.name)
-        case _ => col(sf.name)
-      })
-      df.select(colsToSelect: _*)
+      def cutStrings2(colNameToMaxLength: Map[String, Int], caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
+        val loweredColNameToMaxLength = if (caseSensitive) colNameToMaxLength else colNameToMaxLength.map(t => t.copy(t._1.toLowerCase))
+        val f = (cn: String) => {
+          val colName = if (caseSensitive) cn else cn.toLowerCase
+          substring(col(cn), 0, loweredColNameToMaxLength(colName))
+        }
+        transformStrings(colNameToMaxLength.keys.toSeq, caseSensitive, f)
+      }
+
+      def regexpReplace(pattern: String,
+                        replacement: String,
+                        colNames: Seq[String],
+                        caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
+        transformStrings(colNames, caseSensitive, cn => regexp_replace(col(cn), pattern, replacement))
+      }
+
+      private def transformStrings(colNames: Seq[String] = df.stringColumns, caseSensitive: Boolean = defaultCaseSensitivity, f: String => Column) = {
+        val sc: (String, String) => Boolean = areStringsEqual(caseSensitive)
+        val colsToSelect = df.schema.map(sf => sf.dataType match {
+          case StringType if colNames.exists(cn => sc(cn, sf.name)) => f(sf.name).as(sf.name)
+          case _ => col(sf.name)
+        })
+        df.select(colsToSelect: _*)
+      }
     }
   }
 }

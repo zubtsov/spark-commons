@@ -5,14 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.zubtsov</groupId>
-    <artifactId>spark-commons_3.0_2.12</artifactId>
+    <artifactId>spark-commons_${spark.major.version}_${scala.major.version}</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <properties>
         <scala.major.version>2.12</scala.major.version>
         <scala.minor.version>10</scala.minor.version>
         <scala.version>${scala.major.version}.${scala.minor.version}</scala.version>
-        <spark.version>3.0.3</spark.version>
+        <spark.major.version>3.2</spark.major.version>
+        <spark.version>${spark.major.version}.0</spark.version>
     </properties>
 
     <dependencies>

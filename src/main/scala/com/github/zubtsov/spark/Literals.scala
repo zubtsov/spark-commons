@@ -1,4 +1,4 @@
-package com.github.zubtsov.spark.enums
+package com.github.zubtsov.spark
 
 import java.sql.{Date, Timestamp}
 
