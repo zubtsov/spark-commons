@@ -3,6 +3,8 @@ package com.github.zubtsov.spark.sql
 import com.github.zubtsov.spark.enums.ColumnPosition
 import com.github.zubtsov.spark.enums.ColumnPosition.ColumnPosition
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{LongType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
@@ -16,12 +18,23 @@ object DataFrameWithId {
 
   object implicits {
     implicit class DataFrameWithIdImpl(df: DataFrame) {
+      /**
+       * [[DataFrameWithId.zipWithId()]]
+       */
+      def zipWithId(offset: Long = 1L, idColumnName: String = "id", pos: ColumnPosition = ColumnPosition.Tail): DataFrame = {
+        df.transform(DataFrameWithId.zipWithId(offset, idColumnName, pos))
+      }
+      /**
+       * [[DataFrameWithId.zipWithIndex()]]
+       */
       def zipWithIndex(offset: Long = 1L,
                        idColumnName: String = "id",
                        pos: ColumnPosition = ColumnPosition.Tail): DataFrame = {
         df.transform(DataFrameWithId.zipWithIndex(offset, idColumnName, pos))
       }
-
+      /**
+       * [[DataFrameWithId.zipWithUniqueId()]]
+       */
       def zipWithUniqueId(offset: Long = 1L,
                           idColumnName: String = "id",
                           pos: ColumnPosition = ColumnPosition.Tail): DataFrame = {
@@ -31,6 +44,60 @@ object DataFrameWithId {
   }
 
   /**
+   * This implementation is "RDD-free", but using UDF. Inspired by: https://stackoverflow.com/questions/30304810/dataframe-ified-zipwithindex/48454000#48454000
+   * @param offset the starting value of the identifier (included)
+   * @param idColumnName the name of the identifier column
+   * @param pos the position of a column relative to the existing columns
+   * @param df a table to which the identifier will be added
+   * @return data frame with continuous unique identifier column
+   */
+  def zipWithId(offset: Long = 1, idColumnName: String = "id", pos: ColumnPosition = ColumnPosition.Tail)(df: DataFrame): DataFrame = {
+    val partitionIdColName = "_tmp_partition_id_"
+    val monotonicallyIncreasingIdColName = "_tmp_monotonically_increasing_id_"
+
+    val numberOfRecordsPerPartitionColName = "_tmp_number_of_records_per_partition_"
+    val partitionOffsetColName = "_tmp_partition_offset_"
+
+    val dfWithPartitionId = df
+      .withColumn(partitionIdColName, spark_partition_id().cast(LongType))
+      .withColumn(monotonicallyIncreasingIdColName, monotonically_increasing_id())
+
+    val partitionsOffsets: Map[Long, Long] = dfWithPartitionId
+      .groupBy(partitionIdColName)
+      .agg(
+        count(lit(1)).as(numberOfRecordsPerPartitionColName),
+        min(monotonicallyIncreasingIdColName).as(monotonicallyIncreasingIdColName) //try to use min(...) in case first(...) doesn't work
+      )
+      .select(
+        col(partitionIdColName),
+        (
+          sum(numberOfRecordsPerPartitionColName)
+            .over(Window.orderBy(partitionIdColName)).as("total_number_of_records") -
+          col(numberOfRecordsPerPartitionColName) -
+          col(monotonicallyIncreasingIdColName) +
+          lit(offset)
+        ).as(partitionOffsetColName)
+      )
+      .collect()
+      .map(row => (row.getAs[Long](partitionIdColName), row.getAs[Long](partitionOffsetColName))).toMap
+
+    val idColumn = (col(partitionOffsetColName) + col(monotonicallyIncreasingIdColName)).as(idColumnName)
+
+    val colsToSelect = pos match {
+      case ColumnPosition.Head => Seq(idColumn) ++ dfWithPartitionId.columns.map(col)
+      case ColumnPosition.Tail => dfWithPartitionId.columns.map(col).toSeq ++ Seq(idColumn)
+    }
+
+    val mapPartitionIdToOffset = udf((partitionId: Int) => partitionsOffsets(partitionId)) //unfortunately, DataFrame.na.replace doesn't support Long type
+
+    dfWithPartitionId
+      .withColumn(partitionOffsetColName, mapPartitionIdToOffset(col(partitionIdColName)))
+      .select(colsToSelect:_*)
+      .drop(partitionIdColName, partitionOffsetColName, monotonicallyIncreasingIdColName)
+  }
+
+  /**
+   * This implementation uses conversion to [[org.apache.spark.rdd.RDD]] and back to [[org.apache.spark.sql.DataFrame]]
    * @param offset the starting value of the identifier (included)
    * @param idColumnName the name of the identifier column
    * @param pos the position of a column relative to the existing columns
@@ -45,6 +112,7 @@ object DataFrameWithId {
   }
 
   /**
+   * This implementation uses conversion to [[org.apache.spark.rdd.RDD]] and back to [[org.apache.spark.sql.DataFrame]]
    * @param offset the starting value of the identifier (included)
    * @param idColumnName the name of the identifier column
    * @param pos the position of a column relative to the existing columns
