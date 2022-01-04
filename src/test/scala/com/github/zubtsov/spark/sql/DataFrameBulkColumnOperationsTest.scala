@@ -181,24 +181,46 @@ class DataFrameBulkColumnOperationsTest extends SparkFunSuite {
     assertEquals(expected, actual)
   }
 
-  test("Test regexp replace") {
+  test("Test regexp replace caseSensitive = false") {
     val source = spark.createDataFrame(
       "`col1` STRING, `col2` STRING,  `col3` STRING, `col4` INT",
-      Row(          "Orange",      "Orange",       "Orange",         1),
-      Row(           "Beans",       "Beans",        "Beans",         2),
-      Row(          "Banana",      "Banana",       "Banana",         3),
-      Row(         "Carrots",     "Carrots",      "Carrots",         4)
+      Row(  "Orange",      "Orange",       "Orange",          1),
+      Row(   "Beans",       "Beans",        "Beans",          2),
+      Row(  "Banana",      "Banana",       "Banana",          3),
+      Row( "Carrots",     "Carrots",      "Carrots",          4)
     )
     val expected = spark.createDataFrame(
       "`col1` STRING, `col2` STRING,  `col3` STRING, `col4` INT",
-      Row(          "Oxxxxx",      "Oxxxxx",       "Oxxxxx",         1),
-      Row(           "Bxxxx",       "Bxxxx",        "Bxxxx",         2),
-      Row(          "Bxxxxx",      "Bxxxxx",       "Bxxxxx",         3),
-      Row(         "Cxxxxxx",     "Cxxxxxx",      "Cxxxxxx",         4)
+      Row(  "Oxxxxx",      "Oxxxxx",       "Oxxxxx",          1),
+      Row(   "Bxxxx",       "Bxxxx",        "Bxxxx",          2),
+      Row(  "Bxxxxx",      "Bxxxxx",       "Bxxxxx",          3),
+      Row( "Cxxxxxx",     "Cxxxxxx",      "Cxxxxxx",          4)
     )
 
     import DataFrameBulkColumnOperations.implicits._
-    val actual = source.regexpReplace("[a-z]", "x", Seq("col1", "col2", "col3"))
+    val actual = source.regexpReplace("[a-z]", "x", Seq("col1", "col2", "COL3"), caseSensitive = false)
+
+    assertEquals(expected, actual)
+  }
+
+  test("Test regexp replace caseSensitive = true") {
+    val source = spark.createDataFrame(
+      "`col1` STRING, `col2` STRING,  `col3` STRING, `col4` INT",
+      Row(  "Orange",      "Orange",       "Orange",          1),
+      Row(   "Beans",       "Beans",        "Beans",          2),
+      Row(  "Banana",      "Banana",       "Banana",          3),
+      Row( "Carrots",     "Carrots",      "Carrots",          4)
+    )
+    val expected = spark.createDataFrame(
+      "`col1` STRING, `col2` STRING,  `col3` STRING, `col4` INT",
+      Row(  "Oxxxxx",      "Oxxxxx",       "Orange",          1),
+      Row(   "Bxxxx",       "Bxxxx",        "Beans",          2),
+      Row(  "Bxxxxx",      "Bxxxxx",       "Banana",          3),
+      Row( "Cxxxxxx",     "Cxxxxxx",      "Carrots",          4)
+    )
+
+    import DataFrameBulkColumnOperations.implicits._
+    val actual = source.regexpReplace("[a-z]", "x", Seq("col1", "col2", "COL3"), caseSensitive = true)
 
     assertEquals(expected, actual)
   }
