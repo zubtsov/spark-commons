@@ -44,7 +44,7 @@ object DataFrameColumns {
 
       def byteColumns: Seq[String] = df.schema.filter(isByteColumn).map(_.name)
 
-      def intColumns: Seq[String] = df.schema.filter(isIntColumn).map(_.name)
+      def integerColumns: Seq[String] = df.schema.filter(isIntColumn).map(_.name)
 
       def longColumns: Seq[String] = df.schema.filter(isLongColumn).map(_.name)
 
