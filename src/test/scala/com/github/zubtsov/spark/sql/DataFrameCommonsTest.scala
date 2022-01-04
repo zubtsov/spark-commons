@@ -215,18 +215,35 @@ class DataFrameCommonsTest extends SparkFunSuite {
     assertThrows[ColumnAlreadyExistsException](source.withColumn2("COL1", lit(null)))
   }
 
-  test("Drop duplicates ignore case") {
+  test("Drop duplicates ignore case caseSensitive = false") {
     val source = spark.createDataFrame(
-      "    `col1` STRING",
-      Row(           "a"),
-      Row(           "A"),
-      Row(           "b"),
-      Row(           "b"),
-      Row(           "c")
+      "    `col1` STRING, `col2` STRING",
+      Row(           "a",           "a"),
+      Row(           "A",           "b"),
+      Row(           "b",           "c"),
+      Row(           "b",           "C"),
+      Row(           "c",           "d")
     )
     //todo: check data using contains all/any methods for comparison
     import DataFrameCommons.implicits._
 
-    assertResult(3)(source.dropDuplicatesIgnoreCase().count())
+    assertResult(4)(source.dropDuplicatesIgnoreCase(Seq("COL1", "COL2"), caseSensitive = false).count())
   }
+
+  test("Drop duplicates ignore case caseSensitive = true") {
+    val source = spark.createDataFrame(
+      "    `col1` STRING, `col2` STRING",
+      Row(           "a",           "a"),
+      Row(           "A",           "b"),
+      Row(           "b",           "c"),
+      Row(           "b",           "C"),
+      Row(           "c",           "d")
+    )
+    //todo: check data using contains all/any methods for comparison
+    import DataFrameCommons.implicits._
+
+    assertResult(3)(source.dropDuplicatesIgnoreCase(Seq("col1", "COL2"), caseSensitive = true).count())
+  }
+
+
 }

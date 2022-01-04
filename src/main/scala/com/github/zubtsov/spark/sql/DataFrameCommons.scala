@@ -129,7 +129,7 @@ object DataFrameCommons {
        */
       def dropDuplicatesIgnoreCase(columns: Seq[String] = df.columns,
                                    caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
-        val colNamesProperCase = columns.map(cn1 => df.columns.find(cn2 => areStringsEqual(caseSensitive)(cn1, cn2)).get)
+        val colNamesProperCase = columns.flatMap(cn1 => df.columns.find(cn2 => areStringsEqual(caseSensitive)(cn1, cn2)))
         val mapFunc: String => String = cn => cn + cn.hashCode
         val tmpColNames = colNamesProperCase.map(mapFunc)
 
