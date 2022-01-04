@@ -40,4 +40,33 @@ class DataFrameColumnsTest extends SparkFunSuite {
 
     assertResult(Seq("col1", "col2", "col3", "col4", "col5", "col6", "col7"))(source.numericColumns)
   }
+
+  test("Test columns by name regex selector") {
+    val source = spark.emptyDataFrame2(new StructType()
+      .add("col1", DoubleType)
+      .add("col2", FloatType)
+      .add("col3", ByteType)
+      .add("col11", IntegerType)
+      .add("col12", LongType)
+      .add("col13", ShortType)
+    )
+
+    import DataFrameColumns.implicits._
+    assertResult(Seq("col1", "col2", "col3"))(source.columnsMatching("col[1-3]"))
+  }
+
+  test("Test columns by name selectors caseSensitive = false") {
+    val source = spark.emptyDataFrame2(new StructType()
+      .add("col1", DoubleType)
+      .add("COL11", IntegerType)
+      .add("col2a", FloatType)
+      .add("COL3A", FloatType)
+    )
+
+    import DataFrameColumns.implicits._
+    assertResult(Seq("col1", "COL11"))(source.columnsStartingWith("col1", caseSensitive = false))
+    assertResult(Seq("col2a", "COL3A"))(source.columnsEndingWith("a", caseSensitive = false))
+    assertResult(Seq("col1"))(source.columnsStartingWith("col1", caseSensitive = true))
+    assertResult(Seq("col2a"))(source.columnsEndingWith("a", caseSensitive = true))
+  }
 }
