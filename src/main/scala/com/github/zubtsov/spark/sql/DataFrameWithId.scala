@@ -44,7 +44,7 @@ object DataFrameWithId {
   }
 
   /**
-   * This implementation is "RDD-free", but using UDF. Inspired by: https://stackoverflow.com/questions/30304810/dataframe-ified-zipwithindex/48454000#48454000
+   * This implementation is "RDD-free", but uses UDF. Inspired by: https://stackoverflow.com/questions/30304810/dataframe-ified-zipwithindex/48454000#48454000
    * @param offset the starting value of the identifier (included)
    * @param idColumnName the name of the identifier column
    * @param pos the position of a column relative to the existing columns

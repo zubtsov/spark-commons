@@ -1,5 +1,6 @@
 package com.github.zubtsov.spark.sql
 
+import com.github.zubtsov.spark.SparkFunSuite
 import com.github.zubtsov.spark.SparkSessionCommons.implicits._
 import org.apache.spark.sql.types._
 

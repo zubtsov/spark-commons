@@ -4,7 +4,7 @@ import com.github.zubtsov.spark.enums.ColumnPosition.ColumnPosition
 import com.github.zubtsov.spark.enums.UnionStrategy.UnionStrategy
 import com.github.zubtsov.spark.enums.{ColumnPosition, UnionStrategy}
 import com.github.zubtsov.spark.exception.ColumnAlreadyExistsException
-import com.github.zubtsov.spark.zubtsov.{areStringsEqual, defaultCaseSensitivity}
+import com.github.zubtsov.spark.{areStringsEqual, defaultCaseSensitivity}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Column, DataFrame}
 
@@ -186,8 +186,9 @@ object DataFrameCommons {
 
       private def calculateFraction(numRows: Int): Double = {
         val tableSize = df.count().asInstanceOf[Double]
-        if (numRows < tableSize - 1) {
-          val fraction = (numRows + 1) / tableSize
+        val extraRows = (numRows * 0.1 + 10).toInt //TODO: figure out exact minimum values to guarantee numRows size
+        if (numRows < tableSize - extraRows) {
+          val fraction = (numRows + extraRows) / tableSize
           fraction
         } else {
           1

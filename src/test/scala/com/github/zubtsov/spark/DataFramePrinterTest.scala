@@ -1,11 +1,10 @@
-package com.github.zubtsov.spark.sql
+package com.github.zubtsov.spark
 
-import com.github.zubtsov.spark.DataFramePrinter.implicits._
-import com.github.zubtsov.spark.SparkSessionCommons.implicits._
 import org.apache.spark.sql.Row
 
 class DataFramePrinterTest extends SparkFunSuite {
   test("A generated_unique_id column should be added with unique values starting from offset") {
+    import com.github.zubtsov.spark.SparkSessionCommons.implicits._
     val data = spark.createDataFrame(
       "short_col short, int_col int, long_col long, float_col float, double_col double, date_col date, timestamp_col timestamp, boolean_col boolean, string_col string, decimal_col decimal(18,4)",
       Row(Short.MinValue, Int.MinValue, Long.MinValue, Float.MinValue, Double.MinValue, new java.sql.Date(0L), new java.sql.Timestamp(0L), true, "short string", BigDecimal(-12345.12345)),
@@ -13,6 +12,8 @@ class DataFramePrinterTest extends SparkFunSuite {
       Row(null, null, null, null, null, null, null, null, null, null),
       Row(Short.MaxValue, Int.MaxValue, Long.MaxValue, Float.MaxValue, Double.MaxValue, new java.sql.Date(Long.MaxValue / 40000), new java.sql.Timestamp(Long.MaxValue / 40000), false, "_____long string____", BigDecimal(12345.12345))
     )
+
+    import com.github.zubtsov.spark.DataFramePrinter.implicits._
     val actual = data.toScalaCode()
     println(actual)
 

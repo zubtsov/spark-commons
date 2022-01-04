@@ -1,6 +1,6 @@
-package com.github.zubtsov.spark.sql
+package com.github.zubtsov.spark.data
 
-import com.github.zubtsov.spark.data.DateDimension
+import com.github.zubtsov.spark.SparkFunSuite
 import org.apache.spark.sql.functions._
 
 class DateDimensionTest extends SparkFunSuite {

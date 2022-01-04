@@ -1,8 +1,8 @@
-package com.github.zubtsov.spark
+package com.github.zubtsov
 
 import org.apache.spark.sql.SparkSession
 
-package object zubtsov {
+package object spark {
   private val defaultCaseSensPropName = "com.github.zubtsov.spark.caseSensitive"
 
   protected[spark] def defaultCaseSensitivity: Boolean = {

@@ -1,4 +1,4 @@
-package com.github.zubtsov.spark.sql
+package com.github.zubtsov.spark
 
 import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite

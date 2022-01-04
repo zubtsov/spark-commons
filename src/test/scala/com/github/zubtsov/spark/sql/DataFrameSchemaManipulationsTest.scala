@@ -1,6 +1,7 @@
 package com.github.zubtsov.spark.sql
 
 import com.github.zubtsov.spark.DataFrameComparison._
+import com.github.zubtsov.spark.SparkFunSuite
 import com.github.zubtsov.spark.SparkSessionCommons.implicits._
 import com.github.zubtsov.spark.exception.UnknownColumnsException
 import com.github.zubtsov.spark.sql.DataFrameSchemaManipulations.implicits._

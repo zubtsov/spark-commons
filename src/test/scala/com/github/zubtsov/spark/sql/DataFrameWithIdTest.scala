@@ -1,5 +1,6 @@
 package com.github.zubtsov.spark.sql
 
+import com.github.zubtsov.spark.SparkFunSuite
 import org.apache.spark.sql.Encoders
 
 class DataFrameWithIdTest extends SparkFunSuite {

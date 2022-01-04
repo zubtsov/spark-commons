@@ -1,7 +1,7 @@
 package com.github.zubtsov.spark.sql
 
 import com.github.zubtsov.spark.exception.UnknownColumnsException
-import com.github.zubtsov.spark.zubtsov.{areStringsEqual, defaultCaseSensitivity}
+import com.github.zubtsov.spark.{areStringsEqual, defaultCaseSensitivity}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType

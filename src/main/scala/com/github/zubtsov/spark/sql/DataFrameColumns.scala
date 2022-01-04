@@ -1,6 +1,6 @@
 package com.github.zubtsov.spark.sql
 
-import com.github.zubtsov.spark.zubtsov.defaultCaseSensitivity
+import com.github.zubtsov.spark.defaultCaseSensitivity
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types._
 

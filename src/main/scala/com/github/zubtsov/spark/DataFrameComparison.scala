@@ -1,7 +1,6 @@
 package com.github.zubtsov.spark
 
 import com.github.zubtsov.spark.exception.{DifferentColumnNamesException, DifferentDataException, DifferentSchemasException}
-import com.github.zubtsov.spark.zubtsov.{areStringsEqual, defaultCaseSensitivity}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{StructField, StructType}

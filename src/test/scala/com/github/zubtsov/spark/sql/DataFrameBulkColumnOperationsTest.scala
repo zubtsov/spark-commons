@@ -1,6 +1,7 @@
 package com.github.zubtsov.spark.sql
 
 import com.github.zubtsov.spark.DataFrameComparison.assertEquals
+import com.github.zubtsov.spark.SparkFunSuite
 import org.apache.spark.sql.Row
 import com.github.zubtsov.spark.SparkSessionCommons.implicits._
 
