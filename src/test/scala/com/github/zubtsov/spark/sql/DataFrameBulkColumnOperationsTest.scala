@@ -93,46 +93,90 @@ class DataFrameBulkColumnOperationsTest extends SparkFunSuite {
     assertEquals(expected, actual)
   }
 
-  test("Test strings cutting") {
+  test("Test strings cutting caseSensitive = false") {
     val source = spark.createDataFrame(
       "`col1` STRING, `col2` STRING,  `col3` STRING, `col4` INT",
-      Row(          "Orange",      "Orange",       "Orange",         1),
-      Row(           "Beans",       "Beans",        "Beans",         2),
-      Row(          "Banana",      "Banana",       "Banana",         3),
-      Row(         "Carrots",     "Carrots",      "Carrots",         4)
+      Row(  "Orange",      "Orange",       "Orange",          1),
+      Row(   "Beans",       "Beans",        "Beans",          2),
+      Row(  "Banana",      "Banana",       "Banana",          3),
+      Row( "Carrots",     "Carrots",      "Carrots",          4)
     )
     val expected = spark.createDataFrame(
       "`col1` STRING, `col2` STRING, `col3` STRING, `col4` INT",
-      Row(               "O",           "O",           "O",          1),
-      Row(               "B",           "B",           "B",          2),
-      Row(               "B",           "B",           "B",          3),
-      Row(               "C",           "C",           "C",          4)
+      Row(       "O",           "O",           "O",          1),
+      Row(       "B",           "B",           "B",          2),
+      Row(       "B",           "B",           "B",          3),
+      Row(       "C",           "C",           "C",          4)
     )
 
     import DataFrameBulkColumnOperations.implicits._
-    val actual = source.cutStrings(Seq("col1", "col2", "col3"), 1)
+    val actual = source.cutStrings(Seq("col1", "col2", "COL3"), 1, caseSensitive = false)
 
     assertEquals(expected, actual)
   }
 
-  test("Test strings cutting 2") {
+  test("Test strings cutting caseSensitive = true") {
     val source = spark.createDataFrame(
       "`col1` STRING, `col2` STRING,  `col3` STRING, `col4` INT",
-      Row(          "Orange",      "Orange",       "Orange",         1),
-      Row(           "Beans",       "Beans",        "Beans",         2),
-      Row(          "Banana",      "Banana",       "Banana",         3),
-      Row(         "Carrots",     "Carrots",      "Carrots",         4)
+      Row(  "Orange",      "Orange",       "Orange",          1),
+      Row(   "Beans",       "Beans",        "Beans",          2),
+      Row(  "Banana",      "Banana",       "Banana",          3),
+      Row( "Carrots",     "Carrots",      "Carrots",          4)
     )
     val expected = spark.createDataFrame(
       "`col1` STRING, `col2` STRING, `col3` STRING, `col4` INT",
-      Row(               "O",          "Or",         "Ora",          1),
-      Row(               "B",          "Be",         "Bea",          2),
-      Row(               "B",          "Ba",         "Ban",          3),
-      Row(               "C",          "Ca",         "Car",          4)
+      Row(       "O",           "O",      "Orange",          1),
+      Row(       "B",           "B",       "Beans",          2),
+      Row(       "B",           "B",      "Banana",          3),
+      Row(       "C",           "C",     "Carrots",          4)
     )
 
     import DataFrameBulkColumnOperations.implicits._
-    val actual = source.cutStrings2(Map("col1" -> 1, "col2" -> 2, "col3" -> 3))
+    val actual = source.cutStrings(Seq("col1", "col2", "COL3"), 1, caseSensitive = true)
+
+    assertEquals(expected, actual)
+  }
+
+  test("Test strings cutting 2 caseSensitive = false") {
+    val source = spark.createDataFrame(
+      "`col1` STRING, `col2` STRING,  `col3` STRING, `col4` INT",
+      Row(  "Orange",      "Orange",       "Orange",          1),
+      Row(   "Beans",       "Beans",        "Beans",          2),
+      Row(  "Banana",      "Banana",       "Banana",          3),
+      Row( "Carrots",     "Carrots",      "Carrots",          4)
+    )
+    val expected = spark.createDataFrame(
+      "`col1` STRING, `col2` STRING, `col3` STRING, `col4` INT",
+      Row(       "O",          "Or",         "Ora",          1),
+      Row(       "B",          "Be",         "Bea",          2),
+      Row(       "B",          "Ba",         "Ban",          3),
+      Row(       "C",          "Ca",         "Car",          4)
+    )
+
+    import DataFrameBulkColumnOperations.implicits._
+    val actual = source.cutStrings2(Map("col1" -> 1, "col2" -> 2, "COL3" -> 3), caseSensitive = false)
+
+    assertEquals(expected, actual)
+  }
+
+  test("Test strings cutting 2 caseSensitive = true") {
+    val source = spark.createDataFrame(
+      "`col1` STRING, `col2` STRING,  `col3` STRING, `col4` INT",
+      Row(  "Orange",      "Orange",       "Orange",          1),
+      Row(   "Beans",       "Beans",        "Beans",          2),
+      Row(  "Banana",      "Banana",       "Banana",          3),
+      Row( "Carrots",     "Carrots",      "Carrots",          4)
+    )
+    val expected = spark.createDataFrame(
+      "`col1` STRING, `col2` STRING, `col3` STRING, `col4` INT",
+      Row(       "O",          "Or",      "Orange",          1),
+      Row(       "B",          "Be",       "Beans",          2),
+      Row(       "B",          "Ba",      "Banana",          3),
+      Row(       "C",          "Ca",     "Carrots",          4)
+    )
+
+    import DataFrameBulkColumnOperations.implicits._
+    val actual = source.cutStrings2(Map("col1" -> 1, "col2" -> 2, "COL3" -> 3), caseSensitive = true)
 
     assertEquals(expected, actual)
   }
