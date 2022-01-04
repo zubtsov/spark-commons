@@ -85,13 +85,13 @@ class DataFrameCommonsTest extends SparkFunSuite {
     }
   }
 
-  test("Union test 1") {
+  test("Union test all columns") {
     val t1 = spark.createDataFrame(
       "    `col1` STRING, `col2` STRING",
       Row(           "a",           "b")
     )
     val t2 = spark.createDataFrame(
-      "    `col2` STRING, `col3` STRING",
+      "    `COL2` STRING, `col3` STRING",
       Row(           "c",           "d")
     )
 
@@ -101,18 +101,18 @@ class DataFrameCommonsTest extends SparkFunSuite {
       Row(          null,           "c",           "d"),
     )
     import DataFrameCommons.implicits._
-    val actual = t1.union2(t2)
+    val actual = t1.union2(t2, unionStrategy = UnionStrategy.AllColumns)
 
     assertEquals(actual, expected)
   }
 
-  test("Union test 2") {
+  test("Union test left columns") {
     val t1 = spark.createDataFrame(
       "    `col1` STRING, `col2` STRING",
       Row(           "a",           "b")
     )
     val t2 = spark.createDataFrame(
-      "    `col2` STRING, `col3` STRING",
+      "    `COL2` STRING, `col3` STRING",
       Row(           "c",           "d")
     )
 
@@ -127,13 +127,13 @@ class DataFrameCommonsTest extends SparkFunSuite {
     assertEquals(actual, expected)
   }
 
-  test("Union test 3") {
+  test("Union test right columns") {
     val t1 = spark.createDataFrame(
       "    `col1` STRING, `col2` STRING",
       Row(           "a",           "b")
     )
     val t2 = spark.createDataFrame(
-      "    `col2` STRING, `col3` STRING",
+      "    `COL2` STRING, `col3` STRING",
       Row(           "c",           "d")
     )
 
@@ -148,13 +148,13 @@ class DataFrameCommonsTest extends SparkFunSuite {
     assertEquals(actual, expected)
   }
 
-  test("Union test 4") {
+  test("Union test common columns") {
     val t1 = spark.createDataFrame(
       "    `col1` STRING, `col2` STRING",
       Row(           "a",           "b")
     )
     val t2 = spark.createDataFrame(
-      "    `col2` STRING, `col3` STRING",
+      "    `COL2` STRING, `col3` STRING",
       Row(           "c",           "d")
     )
 
@@ -169,7 +169,7 @@ class DataFrameCommonsTest extends SparkFunSuite {
     assertEquals(actual, expected)
   }
 
-  test("With column test") {
+  test("withColumn2 adds last column") {
     val source = spark.createDataFrame(
       "    `col1` STRING",
       Row(           "a")
@@ -181,12 +181,12 @@ class DataFrameCommonsTest extends SparkFunSuite {
     )
     import org.apache.spark.sql.functions.lit
     import DataFrameCommons.implicits._
-    val actual = source.withColumn2("col2", lit("b"))
+    val actual = source.withColumn2("col2", lit("b"), pos = ColumnPosition.Tail)
 
     assertEquals(actual, expected)
   }
 
-  test("With column test 2") {
+  test("withColumn2 adds first column") {
     val source = spark.createDataFrame(
       "    `col1` STRING",
       Row(           "a")
@@ -203,7 +203,7 @@ class DataFrameCommonsTest extends SparkFunSuite {
     assertEquals(actual, expected)
   }
 
-  test("With column test 3") {
+  test("withColumn2 throws exception in case column already exists") {
     val source = spark.createDataFrame(
       "    `col1` STRING",
       Row(           "a")
@@ -212,7 +212,7 @@ class DataFrameCommonsTest extends SparkFunSuite {
     import org.apache.spark.sql.functions.lit
     import DataFrameCommons.implicits._
 
-    assertThrows[ColumnAlreadyExistsException](source.withColumn2("col1", lit(null)))
+    assertThrows[ColumnAlreadyExistsException](source.withColumn2("COL1", lit(null)))
   }
 
   test("Drop duplicates ignore case") {

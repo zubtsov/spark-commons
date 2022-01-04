@@ -46,11 +46,8 @@ object DataFrameComparison {
   }
 
   def getDataDifference(left: DataFrame, right: DataFrame): DataDifference = {
-    val cols = left.columns.map(col)
-    val leftProjected = left.select(cols: _*)
-    val rightProjected = right.select(cols: _*)
-    val leftMissingRows = rightProjected.exceptAll(leftProjected)
-    val rightMissingRows = leftProjected.exceptAll(rightProjected)
+    val leftMissingRows = right.exceptAll(left)
+    val rightMissingRows = left.exceptAll(right)
     DataDifference(leftMissingRows, rightMissingRows)
   }
 

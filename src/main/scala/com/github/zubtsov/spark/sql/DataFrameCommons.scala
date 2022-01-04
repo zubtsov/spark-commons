@@ -78,10 +78,9 @@ object DataFrameCommons {
                        colName: String,
                        colValue: Column,
                        replaceIfExists: Boolean = false,
-                       pos: ColumnPosition = ColumnPosition.Tail,
-                       caseSensitive: Boolean = defaultCaseSensitivity
+                       pos: ColumnPosition = ColumnPosition.Tail
                      ): DataFrame = {
-        val colExists = df.columns.exists(cn => areStringsEqual(caseSensitive)(cn, colName))
+        val colExists = df.columns.exists(cn => areStringsEqual(false)(cn, colName)) //withColumn is case insensitive
 
         if (colExists && !replaceIfExists) {
           throw ColumnAlreadyExistsException(colName)
@@ -104,12 +103,11 @@ object DataFrameCommons {
        * @return united table
        */
       def union2(right: DataFrame,
-                 unionStrategy: UnionStrategy = UnionStrategy.AllColumns,
-                 caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
+                 unionStrategy: UnionStrategy = UnionStrategy.AllColumns): DataFrame = {
         val left = df
-        lazy val commonColumns = left.columns.filter(cn => right.columns.exists(cn2 => areStringsEqual(caseSensitive)(cn, cn2)))
-        lazy val leftOnlyColumns = left.columns.filter(cn => !right.columns.exists(cn2 => areStringsEqual(caseSensitive)(cn, cn2)))
-        lazy val rightOnlyColumns = right.columns.filter(cn => !left.columns.exists(cn2 => areStringsEqual(caseSensitive)(cn, cn2)))
+        lazy val commonColumns = left.columns.filter(cn => right.columns.exists(cn2 => areStringsEqual(false)(cn, cn2)))
+        lazy val leftOnlyColumns = left.columns.filter(cn => !right.columns.exists(cn2 => areStringsEqual(false)(cn, cn2)))
+        lazy val rightOnlyColumns = right.columns.filter(cn => !left.columns.exists(cn2 => areStringsEqual(false)(cn, cn2)))
         lazy val leftWithEmptyRightCols = left.select((leftOnlyColumns ++ commonColumns).map(col) ++ rightOnlyColumns.map(lit(null).as(_)): _*)
         lazy val rightWithEmptyLeftCols = right.select((rightOnlyColumns ++ commonColumns).map(col) ++ leftOnlyColumns.map(lit(null).as(_)): _*)
         lazy val leftCommonWithEmptyRightCols = left.select(commonColumns.map(col) ++ rightOnlyColumns.map(lit(null).as(_)): _*)
