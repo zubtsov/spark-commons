@@ -5,7 +5,7 @@ import org.apache.spark.sql.Row
 import com.github.zubtsov.spark.SparkSessionCommons.implicits._
 
 class DataFrameBulkColumnOperationsTest extends SparkFunSuite {
-  test("Test strings trimming") {
+  test("Test strings trimming without column names") {
     val source = spark.createDataFrame(
       "        `col1` STRING, `col2` INT",
       Row(       "   Orange",          1),
@@ -27,7 +27,7 @@ class DataFrameBulkColumnOperationsTest extends SparkFunSuite {
     assertEquals(expected, actual)
   }
 
-  test("Test strings trimming 2") {
+  test("Test strings trimming with column names") {
     val source = spark.createDataFrame(
       "        `col1` STRING, `col2` STRING, `col3` INT",
       Row(       "   Orange",   "   Orange",          1),
@@ -45,6 +45,50 @@ class DataFrameBulkColumnOperationsTest extends SparkFunSuite {
 
     import DataFrameBulkColumnOperations.implicits._
     val actual = source.trimStrings(Seq("col1"))
+
+    assertEquals(expected, actual)
+  }
+
+  test("Test strings trimming with column names castSensitive = true") {
+    val source = spark.createDataFrame(
+      "        `col1` STRING, `col2` STRING, `col3` INT",
+      Row(       "   Orange",   "   Orange",          1),
+      Row(         "Beans  ",     "Beans  ",          2),
+      Row(      "  Banana  ",  "  Banana  ",          3),
+      Row(         "Carrots",     "Carrots",          4)
+    )
+    val expected = spark.createDataFrame(
+      "        `col1` STRING, `col2` STRING, `col3` INT",
+      Row(          "Orange",   "   Orange",          1),
+      Row(           "Beans",     "Beans  ",          2),
+      Row(          "Banana",  "  Banana  ",          3),
+      Row(         "Carrots",     "Carrots",          4)
+    )
+
+    import DataFrameBulkColumnOperations.implicits._
+    val actual = source.trimStrings(Seq("col1", "COL2"), caseSensitive = true)
+
+    assertEquals(expected, actual)
+  }
+
+  test("Test strings trimming with column names castSensitive = false") {
+    val source = spark.createDataFrame(
+      "        `col1` STRING, `col2` STRING, `col3` INT",
+      Row(       "   Orange",   "   Orange",          1),
+      Row(         "Beans  ",     "Beans  ",          2),
+      Row(      "  Banana  ",  "  Banana  ",          3),
+      Row(         "Carrots",     "Carrots",          4)
+    )
+    val expected = spark.createDataFrame(
+      "        `col1` STRING, `col2` STRING, `col3` INT",
+      Row(          "Orange",      "Orange",          1),
+      Row(           "Beans",       "Beans",          2),
+      Row(          "Banana",      "Banana",          3),
+      Row(         "Carrots",     "Carrots",          4)
+    )
+
+    import DataFrameBulkColumnOperations.implicits._
+    val actual = source.trimStrings(Seq("col1", "COL2"), caseSensitive = false)
 
     assertEquals(expected, actual)
   }
