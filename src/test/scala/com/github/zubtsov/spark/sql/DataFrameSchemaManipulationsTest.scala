@@ -3,9 +3,10 @@ package com.github.zubtsov.spark.sql
 import com.github.zubtsov.spark.DataFrameComparison._
 import com.github.zubtsov.spark.SparkFunSuite
 import com.github.zubtsov.spark.SparkSessionCommons.implicits._
-import com.github.zubtsov.spark.exception.UnknownColumnsException
+import com.github.zubtsov.spark.exception.{DifferentColumnNamesException, UnknownColumnsException}
 import com.github.zubtsov.spark.sql.DataFrameSchemaManipulations.implicits._
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.types.StructType
 //TODO: add more test cases
 //TODO: test not empty data frames
 class DataFrameSchemaManipulationsTest extends SparkFunSuite {
@@ -73,7 +74,7 @@ class DataFrameSchemaManipulationsTest extends SparkFunSuite {
     assertEquals(expected, actual)
   }
 
-  test("Schema is casted missing columns added") {
+  test("Schema is casted missing columns added, excessive columns removed") {
     val source = spark.createDataFrame(
       "a STRING, b STRING, c STRING",
       Row(  "1",    "1.0",    "true"),
@@ -82,13 +83,33 @@ class DataFrameSchemaManipulationsTest extends SparkFunSuite {
     )
 
     val expected = spark.createDataFrame(
-      "a INT, b DOUBLE, c BOOLEAN, d STRING",
-      Row( 1,      1.0,      true,     null),
-      Row( 2,      2.0,     false,     null),
-      Row( 3,      3.0,      null,     null)
+      "a INT, b DOUBLE, d STRING",
+      Row( 1,      1.0,     null),
+      Row( 2,      2.0,     null),
+      Row( 3,      3.0,     null)
     )
 
-    val actual = source.cast(expected.schema, addMissingColumns = true)
+    val actual = source.cast(expected.schema, removeExcessiveColumns = true, addMissingColumns = true)
     assertEquals(expected, actual)
+  }
+
+  test("Cast schema don't add excessive columns, but removes missing columns") {
+    val source = spark.createDataFrame(
+      "a STRING, b STRING, c STRING",
+      Row(  "1",    "1.0",    "true"),
+      Row(  "2",    "2.0",   "false"),
+      Row(  "3",    "3.0",        "")
+    )
+
+    val targetSchema = StructType.fromDDL("a INT, b DOUBLE, d STRING")
+    val expected = spark.createDataFrame(
+      "a INT, b DOUBLE",
+      Row( 1,      1.0),
+      Row( 2,      2.0),
+      Row( 3,      3.0)
+    )
+
+    val actual = source.cast(targetSchema, removeExcessiveColumns = true, addMissingColumns = false)
+    assertEquals(actual, expected)
   }
 }
