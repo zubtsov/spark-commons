@@ -53,7 +53,7 @@ class DataFrameSchemaManipulationsTest extends SparkFunSuite {
     assertEqualSchemas(expected, actual)
   }
 
-  test("Schema is casted") {
+  test("Schema is casted normal case") {
     val source = spark.createDataFrame(
       "a STRING, b STRING, c STRING",
       Row(  "1",    "1.0",    "true"),
@@ -70,6 +70,25 @@ class DataFrameSchemaManipulationsTest extends SparkFunSuite {
 
     val actual = source.cast(expected.schema)
 
+    assertEquals(expected, actual)
+  }
+
+  test("Schema is casted missing columns added") {
+    val source = spark.createDataFrame(
+      "a STRING, b STRING, c STRING",
+      Row(  "1",    "1.0",    "true"),
+      Row(  "2",    "2.0",   "false"),
+      Row(  "3",    "3.0",        "")
+    )
+
+    val expected = spark.createDataFrame(
+      "a INT, b DOUBLE, c BOOLEAN, d STRING",
+      Row( 1,      1.0,      true,     null),
+      Row( 2,      2.0,     false,     null),
+      Row( 3,      3.0,      null,     null)
+    )
+
+    val actual = source.cast(expected.schema, addMissingColumns = true)
     assertEquals(expected, actual)
   }
 }

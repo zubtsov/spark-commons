@@ -38,26 +38,31 @@ object DataFrameSchemaManipulations {
        * @param targetSchema
        * @param addMissingColumns
        * @param removeExcessiveColumns
-       * @param caseSensitive defines whether to compare column names in case sensitive way
        * @return the table with the target schema
        */
       def cast(targetSchema: StructType,
                addMissingColumns: Boolean = true,
-               removeExcessiveColumns: Boolean = true,
-               caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
-        val sc: (String, String) => Boolean = areStringsEqual(caseSensitive)
+               removeExcessiveColumns: Boolean = true): DataFrame = {
+        val sc: (String, String) => Boolean = areStringsEqual(false)
         val targetColumns = targetSchema.map(_.name)
 
         val excessiveColumnsToSelect = df.schema
           .filter(sf => !targetColumns.exists(cn2 => sc(sf.name, cn2)))
           .map(sf => col(sf.name).cast(sf.dataType))
 
-        val commonAndMissingColsToSelect = targetSchema
-          .filter(sf => df.columns.exists(cn => sc(sf.name, cn)) || addMissingColumns)
+        val commonColsToSelect = targetSchema
+          .filter(sf => df.columns.exists(cn => sc(sf.name, cn)))
           .map(sf => col(sf.name).cast(sf.dataType))
 
-        val resultColumnsToSelect = commonAndMissingColsToSelect ++ (if (removeExcessiveColumns) Seq.empty
-        else excessiveColumnsToSelect)
+        val missingColsToSelect = targetSchema
+          .filter(sf => !df.columns.exists(cn => sc(sf.name, cn)))
+          .map(sf => lit(null).cast(sf.dataType).as(sf.name))
+
+        val resultColumnsToSelect = commonColsToSelect ++ (
+          if (removeExcessiveColumns) Seq.empty else excessiveColumnsToSelect
+          ) ++ (
+          if (addMissingColumns) missingColsToSelect else Seq.empty
+        )
 
         df.select(resultColumnsToSelect: _*)
       }
