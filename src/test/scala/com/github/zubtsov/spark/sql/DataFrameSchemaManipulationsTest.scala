@@ -33,11 +33,17 @@ class DataFrameSchemaManipulationsTest extends SparkFunSuite {
     assertThrows[UnknownColumnsException](source.withTrimmedColumnNames(Seq("col_name1 ", "COL_NAME3"), true))
   }
 
-  test("Unicode trim column names test") {
+  test("Unicode trim column names test case insensitive") {
     val source = spark.emptyDataFrame2("`\u00a0col_name1 ` STRING, ` col_name2\u00a0` INT, ` \t\u00a0col_name3\u00a0\t  ` DOUBLE, ` do not trim ` STRING")
     val expected = spark.emptyDataFrame2("`col_name1` STRING, `col_name2` INT, `col_name3` DOUBLE, ` do not trim ` STRING")
     val actual = source.withUnicodeTrimmedColumnNames(Seq("col_name1", "COL_NAME2", "col_name3"), false)
     assertEqualSchemas(expected, actual, true, true)
+  }
+
+  test("Unicode trim column names test case sensitive") {
+    val source = spark.emptyDataFrame2("`\u00a0col_name1 ` STRING, ` col_name2\u00a0` INT, ` \t\u00a0col_name3\u00a0\t  ` DOUBLE, ` do not trim ` STRING")
+    val expected = spark.emptyDataFrame2("`col_name1` STRING, ` col_name2\u00a0` INT, `col_name3` DOUBLE, ` do not trim ` STRING")
+    assertThrows[UnknownColumnsException](expected, source.withUnicodeTrimmedColumnNames(Seq("col_name1", "COL_NAME2", "col_name3"), true))
   }
 
   test("Columns are sorted") {
