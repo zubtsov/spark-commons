@@ -152,10 +152,11 @@ object DataFrameCommons {
                   nameColumn: String = "name",
                   valueColumn: String = "value",
                   caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
-        val notUnpivotedCol = (cn: String) => !columns.exists(areStringsEqual(caseSensitive)(cn, _))
+        val unpivotedColFilter = (cn: String) => columns.exists(areStringsEqual(caseSensitive)(cn, _))
+        val notUnpivotedColFilter = (cn: String) => !unpivotedColFilter(cn)
 
-        val remainingCols = df.columns.filter(notUnpivotedCol).map(col)
-        val unpivotExpr = explode(map(columns.flatMap(c => Seq(lit(c), col(c))):_*)).as(Seq(nameColumn, valueColumn))
+        val remainingCols = df.columns.filter(notUnpivotedColFilter).map(col)
+        val unpivotExpr = explode(map(df.columns.filter(unpivotedColFilter).flatMap(c => Seq(lit(c), col(c))):_*)).as(Seq(nameColumn, valueColumn))
         df.select(remainingCols :+ unpivotExpr: _*)
       }
 
@@ -172,12 +173,15 @@ object DataFrameCommons {
                   nameColumn: String = "name",
                   valueColumn: String = "value",
                   caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
-        val notUnpivotedCol = (cn: String) => !columns.exists(areStringsEqual(caseSensitive)(cn, _))
+        val unpivotedColFilter = (cn: String) => columns.exists(areStringsEqual(caseSensitive)(cn, _))
+        val notUnpivotedColFilter = (cn: String) => !columns.exists(areStringsEqual(caseSensitive)(cn, _))
 
-        val remainingCols = df.columns.filter(notUnpivotedCol).map(col)
-        val unpivotedColsExpr = columns.map(cn => s"'${cn}', ${cn}").mkString(", ")
-        val unpivotExpr = expr(s"stack(${columns.length}, ${unpivotedColsExpr}) as (${nameColumn}, ${valueColumn})")
-        df.select(remainingCols :+ unpivotExpr: _*)
+        val remainingColumns = df.columns.filter(notUnpivotedColFilter).map(col)
+        val unpivotedColumns = df.columns.filter(unpivotedColFilter)
+
+        val unpivotedColsExpr = unpivotedColumns.map(cn => s"'${cn}', ${cn}").mkString(", ")
+        val unpivotExpr = expr(s"stack(${unpivotedColumns.length}, ${unpivotedColsExpr}) as (${nameColumn}, ${valueColumn})")
+        df.select(remainingColumns :+ unpivotExpr: _*)
       }
 
       //TODO: implement transpose function (like matrix transposition)
