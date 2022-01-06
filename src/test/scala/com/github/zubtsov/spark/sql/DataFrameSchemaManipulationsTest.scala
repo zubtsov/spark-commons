@@ -93,7 +93,7 @@ class DataFrameSchemaManipulationsTest extends SparkFunSuite {
     assertEquals(expected, actual)
   }
 
-  test("Cast schema doesn't add excessive columns, but removes missing columns") {
+  test("Cast schema removes excessive columns, but doesn't add missing columns") {
     val source = spark.createDataFrame(
       "a STRING, b STRING, c STRING",
       Row(  "1",    "1.0",    "true"),
@@ -113,7 +113,7 @@ class DataFrameSchemaManipulationsTest extends SparkFunSuite {
     assertEquals(actual, expected)
   }
 
-  test("Cast schema adds excessive columns, but doesn't remove missing columns") {
+  test("Cast schema doesn't excessive columns, but adds missing columns") {
     val source = spark.createDataFrame(
       "a STRING, b STRING, c STRING",
       Row(  "1",    "1.0",    "true"),
@@ -130,6 +130,26 @@ class DataFrameSchemaManipulationsTest extends SparkFunSuite {
     )
 
     val actual = source.cast(targetSchema, removeExcessiveColumns = false, addMissingColumns = true)
+    assertEquals(actual, expected)
+  }
+
+  test("Cast schema adds excessive columns, but doesn't add missing columns") {
+    val source = spark.createDataFrame(
+      "a STRING, b STRING, c STRING",
+      Row(  "1",    "1.0",    "true"),
+      Row(  "2",    "2.0",   "false"),
+      Row(  "3",    "3.0",        "")
+    )
+
+    val targetSchema = StructType.fromDDL("a INT, b DOUBLE, d STRING")
+    val expected = spark.createDataFrame(
+      "a INT, b DOUBLE, c STRING",
+      Row( 1,      1.0,   "true"),
+      Row( 2,      2.0,  "false"),
+      Row( 3,      3.0,       "")
+    )
+
+    val actual = source.cast(targetSchema, removeExcessiveColumns = false, addMissingColumns = false)
     assertEquals(actual, expected)
   }
 }
