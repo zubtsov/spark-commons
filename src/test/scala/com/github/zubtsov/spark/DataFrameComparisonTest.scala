@@ -1,7 +1,7 @@
 package com.github.zubtsov.spark
 
 import SparkSessionCommons.implicits._
-import org.apache.spark.sql.types.{IntegerType, StringType, StructField}
+import org.apache.spark.sql.types.{DoubleType, IntegerType, StringType, StructField}
 
 class DataFrameComparisonTest extends SparkFunSuite {
   test("Column names difference case insensitive") {
@@ -27,5 +27,13 @@ class DataFrameComparisonTest extends SparkFunSuite {
     val difference = DataFrameComparison.getSchemaDifference(df1.schema, df2.schema, caseSensitive = false)
     assert(difference.rightMissingFields == Seq(StructField("col1", StringType), StructField("col2", StringType), StructField("col4", IntegerType)))
     assert(difference.leftMissingFields == Seq(StructField("col1", IntegerType), StructField("COL2", IntegerType), StructField("col5", IntegerType)))
+  }
+
+  test("Schema difference case sensitive") {
+    val df1 = spark.emptyDataFrame2("col1 STRING, col2 STRING, col3 DOUBLE, col4 INT")
+    val df2 = spark.emptyDataFrame2("col1 INT, COL2 STRING, COL3 DOUBLE, col5 INT")
+    val difference = DataFrameComparison.getSchemaDifference(df1.schema, df2.schema, caseSensitive = true)
+    assert(difference.rightMissingFields == Seq(StructField("col1", StringType), StructField("col2", StringType), StructField("col3", DoubleType), StructField("col4", IntegerType)))
+    assert(difference.leftMissingFields == Seq(StructField("col1", IntegerType), StructField("COL2", StringType), StructField("COL3", DoubleType), StructField("col5", IntegerType)))
   }
 }
