@@ -32,10 +32,10 @@ object DataFrameComparison {
     def isTheSame(): Boolean = !isDifferent()
   }
 
-  def getColumnNamesDifference(left: DataFrame, right: DataFrame, caseSensitive: Boolean = defaultCaseSensitivity): ColumnNamesDifference = {
+  def getColumnNamesDifference(leftColumns: Seq[String], rightColumns: Seq[String], caseSensitive: Boolean = defaultCaseSensitivity): ColumnNamesDifference = {
     val sc = areStringsEqual(caseSensitive)(_, _)
-    val leftMissingCols = right.columns.filter(lcn => !left.columns.exists(rcn => sc(lcn, rcn)))
-    val rightMissingCols = left.columns.filter(lcn => !right.columns.exists(rcn => sc(lcn, rcn)))
+    val leftMissingCols = rightColumns.filter(lcn => !leftColumns.exists(rcn => sc(lcn, rcn)))
+    val rightMissingCols = leftColumns.filter(lcn => !rightColumns.exists(rcn => sc(lcn, rcn)))
     ColumnNamesDifference(leftMissingCols, rightMissingCols)
   }
 
@@ -57,7 +57,7 @@ object DataFrameComparison {
   }
 
   def hasEqualColumnNames(left: DataFrame, right: DataFrame, caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
-    getColumnNamesDifference(left, right, caseSensitive).isTheSame()
+    getColumnNamesDifference(left.columns, right.columns, caseSensitive).isTheSame()
   }
 
   def hasEqualSchemas(left: DataFrame, right: DataFrame, ignoreNullability: Boolean = true, caseSensitive: Boolean = defaultCaseSensitivity): Unit = {
@@ -69,7 +69,7 @@ object DataFrameComparison {
   }
 
   def assertEqualColumnNames(left: DataFrame, right: DataFrame, caseSensitive: Boolean = defaultCaseSensitivity): Unit = {
-    val columnNamesDifference = getColumnNamesDifference(left, right, caseSensitive)
+    val columnNamesDifference = getColumnNamesDifference(left.columns, right.columns, caseSensitive)
     if (columnNamesDifference.isDifferent()) {
       throw DifferentColumnNamesException(columnNamesDifference)
     }
