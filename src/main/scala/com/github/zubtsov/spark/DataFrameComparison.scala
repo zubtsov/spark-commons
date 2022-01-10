@@ -6,8 +6,7 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{StructField, StructType}
 
 //TODO: add approximate comparison of double values with some epsilon
-//TODO: add contains all rows method
-//TODO: add contains any row
+//TODO: add tests
 /**
  * Utility object to compare [[org.apache.spark.sql.DataFrame]]s' columns, schemas and data
  */
@@ -16,6 +15,9 @@ object DataFrameComparison {
     def isDifferent(): Boolean = leftMissingCols.nonEmpty || rightMissingCols.nonEmpty
 
     def isTheSame(): Boolean = !isDifferent()
+
+    override def toString: String = s"Missing columns from the left: ${leftMissingCols.mkString(", ")}" +
+      s"\nMissing columns from the right: ${rightMissingCols.mkString(", ")}"
   }
 
   final case class SchemaDifference(leftMissingFields: Seq[StructField], rightMissingFields: Seq[StructField]) {
