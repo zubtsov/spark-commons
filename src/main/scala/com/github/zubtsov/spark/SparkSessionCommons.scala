@@ -7,35 +7,60 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 object SparkSessionCommons {
 
   object implicits {
-    implicit class SparkSessionCommons(ss: SparkSession) {
-      /** Returns an empty [[org.apache.spark.sql.DataFrame]] with the specified schema.
-       *
-       * @param schema the schema of an empty [[org.apache.spark.sql.DataFrame]].
+
+    implicit class SparkSessionCommonsImpl(ss: SparkSession) { //TODO: utilize SparkSession object?
+      /**
+       * [[SparkSessionCommons.emptyDataFrame2]]
        */
       def emptyDataFrame2(schema: StructType): DataFrame = {
-        ss.emptyDataFrame.select(
-          schema.map(sf => lit(null).cast(sf.dataType).as(sf.name)): _*
-        )
+        SparkSessionCommons.emptyDataFrame2(schema)
       }
-
+      /**
+       * [[SparkSessionCommons.emptyDataFrame2]]
+       */
       def emptyDataFrame2(schema: String): DataFrame = {
-        emptyDataFrame2(StructType.fromDDL(schema))
+        SparkSessionCommons.emptyDataFrame2(schema)
       }
 
       def createDataFrame(schema: StructType, rows: Seq[Row]): DataFrame = {
-        val rdd = ss.sparkContext.parallelize(rows)
-        ss.createDataFrame(rdd, schema)
+        SparkSessionCommons.createDataFrame(schema, rows)
       }
 
       def createDataFrame(schema: StructType, rows: Seq[Row], numSlices: Int): DataFrame = {
-        val rdd = ss.sparkContext.parallelize(rows, numSlices)
-        ss.createDataFrame(rdd, schema)
+        SparkSessionCommons.createDataFrame(schema, rows, numSlices)
       }
 
       def createDataFrame(schema: String, rows: Row*): DataFrame = {
-        createDataFrame(StructType.fromDDL(schema), rows)
+        SparkSessionCommons.createDataFrame(StructType.fromDDL(schema), rows)
       }
     }
   }
 
+  /** Returns an empty [[org.apache.spark.sql.DataFrame]] with the specified schema.
+   *
+   * @param schema the schema of an empty [[org.apache.spark.sql.DataFrame]].
+   */
+  def emptyDataFrame2(schema: StructType): DataFrame = {
+    SparkSession.active.emptyDataFrame.select(
+      schema.map(sf => lit(null).cast(sf.dataType).as(sf.name)): _*
+    )
+  }
+
+  def emptyDataFrame2(schema: String): DataFrame = {
+    emptyDataFrame2(StructType.fromDDL(schema))
+  }
+
+  def createDataFrame(schema: StructType, rows: Seq[Row]): DataFrame = {
+    val rdd = SparkSession.active.sparkContext.parallelize(rows)
+    SparkSession.active.createDataFrame(rdd, schema)
+  }
+
+  def createDataFrame(schema: StructType, rows: Seq[Row], numSlices: Int): DataFrame = {
+    val rdd = SparkSession.active.sparkContext.parallelize(rows, numSlices)
+    SparkSession.active.createDataFrame(rdd, schema)
+  }
+
+  def createDataFrame(schema: String, rows: Row*): DataFrame = {
+    createDataFrame(StructType.fromDDL(schema), rows)
+  }
 }
