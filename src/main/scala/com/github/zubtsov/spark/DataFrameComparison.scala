@@ -24,6 +24,9 @@ object DataFrameComparison {
     def isDifferent(): Boolean = leftMissingFields.nonEmpty || rightMissingFields.nonEmpty
 
     def isTheSame(): Boolean = !isDifferent()
+
+    override def toString: String = s"Missing columns from the left: ${StructType(leftMissingFields).toDDL}" +
+      s"\nMissing columns from the right: ${StructType(rightMissingFields).toDDL}"
   }
 
   final case class DataDifference(leftMissingRows: DataFrame, rightMissingRows: DataFrame) { //TODO: case class probably doesn't make much sense here
@@ -42,8 +45,9 @@ object DataFrameComparison {
   def getSchemaDifference(left: StructType, right: StructType, ignoreNullability: Boolean = true, caseSensitive: Boolean = defaultCaseSensitivity): SchemaDifference = {
     val sc = areStringsEqual(caseSensitive)(_, _)
     val nc = (sf1: StructField, sf2: StructField) => if (ignoreNullability) true else sf1.nullable == sf2.nullable
-    val leftMissingFields = right.filter(lsf => !left.exists(rsf => sc(lsf.name, rsf.name) && nc(lsf, rsf)))
-    val rightMissingFields = left.filter(lsf => !right.exists(rsf => sc(lsf.name, rsf.name) && nc(lsf, rsf)))
+    val tc = (sf1: StructField, sf2: StructField) => sf1.dataType == sf2.dataType
+    val leftMissingFields = right.filter(lsf => !left.exists(rsf => sc(lsf.name, rsf.name) && nc(lsf, rsf) && tc(lsf, rsf)))
+    val rightMissingFields = left.filter(lsf => !right.exists(rsf => sc(lsf.name, rsf.name) && nc(lsf, rsf) && tc(lsf, rsf)))
     SchemaDifference(leftMissingFields, rightMissingFields)
   }
 
