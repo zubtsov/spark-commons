@@ -8,6 +8,7 @@ class DataFrameComparisonTest extends SparkFunSuite {
     val df1 = spark.emptyDataFrame2("col1 STRING, col2 STRING, col3 DOUBLE, col4 INT")
     val df2 = spark.emptyDataFrame2("col1 INT, COL2 INT, COL3 DOUBLE, col5 INT")
     val difference = DataFrameComparison.getColumnNamesDifference(df1.columns, df2.columns, caseSensitive = false)
+    assert(difference.isDifferent())
     assert(difference.leftMissingCols == Seq("col5"))
     assert(difference.rightMissingCols == Seq("col4"))
   }
@@ -17,8 +18,8 @@ class DataFrameComparisonTest extends SparkFunSuite {
     val df2 = spark.emptyDataFrame2("col1 INT, COL2 INT, COL3 DOUBLE, col5 INT")
     val difference = DataFrameComparison.getColumnNamesDifference(df1.columns, df2.columns, caseSensitive = true)
     assert(difference.isDifferent())
-    assert(difference.leftMissingCols.size == 3)
-    assert(difference.rightMissingCols.size == 3)
+    assert(difference.leftMissingCols == Seq("COL2", "COL3", "col5"))
+    assert(difference.rightMissingCols == Seq("col2", "col3", "col4"))
   }
 
   test("Schema difference case insensitive") {
