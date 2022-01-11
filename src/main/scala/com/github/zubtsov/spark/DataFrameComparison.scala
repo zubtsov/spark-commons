@@ -5,8 +5,8 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{StructField, StructType}
 
-//TODO: add approximate comparison of double values with some epsilon
-//TODO: add tests
+//TODO: add approximate comparison of double values with some epsilon & case insensitive string comparison
+
 /**
  * Utility object to compare [[org.apache.spark.sql.DataFrame]]s' columns, schemas and data
  */
@@ -60,16 +60,28 @@ object DataFrameComparison {
     DataDifference(leftMissingRows, rightMissingRows)
   }
 
-  def hasEqualColumnNames(left: DataFrame, right: DataFrame, caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
-    getColumnNamesDifference(left.columns, right.columns, caseSensitive).isTheSame()
+  def hasEqualColumnNames(leftColumns: Seq[String], rightColumns: Seq[String], caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
+    getColumnNamesDifference(leftColumns, rightColumns, caseSensitive).isTheSame()
   }
 
-  def hasEqualSchemas(left: DataFrame, right: DataFrame, ignoreNullability: Boolean = true, caseSensitive: Boolean = defaultCaseSensitivity): Unit = {
+  def hasDifferentColumnNames(leftColumns: Seq[String], rightColumns: Seq[String], caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
+    getColumnNamesDifference(leftColumns, rightColumns, caseSensitive).isDifferent()
+  }
+
+  def hasEqualSchemas(left: DataFrame, right: DataFrame, ignoreNullability: Boolean = true, caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
     getSchemaDifference(left.schema, right.schema, ignoreNullability, caseSensitive).isTheSame()
   }
 
-  def hasEqualData(left: DataFrame, right: DataFrame): Unit = {
+  def hasDifferentSchemas(left: DataFrame, right: DataFrame, ignoreNullability: Boolean = true, caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
+    getSchemaDifference(left.schema, right.schema, ignoreNullability, caseSensitive).isDifferent()
+  }
+
+  def hasEqualData(left: DataFrame, right: DataFrame): Boolean = {
     getDataDifference(left, right).isTheSame()
+  }
+
+  def hasDifferentData(left: DataFrame, right: DataFrame): Boolean = {
+    getDataDifference(left, right).isDifferent()
   }
 
   def assertEqualColumnNames(left: DataFrame, right: DataFrame, caseSensitive: Boolean = defaultCaseSensitivity): Unit = {
