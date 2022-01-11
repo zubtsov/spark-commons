@@ -11,6 +11,9 @@ object DataFrameColumns {
       private def any[A](predicates: (A => Boolean)*): A => Boolean =
         a => predicates.exists(pred => pred(a))
 
+      private def none[A](predicates: (A => Boolean)*): A => Boolean =
+        a => !predicates.exists(pred => pred(a))
+
       private val isDoubleColumn: (StructField) => Boolean = sf => sf.dataType == DoubleType
       private val isFloatColumn: (StructField) => Boolean = sf => sf.dataType == FloatType
       private val isByteColumn: (StructField) => Boolean = sf => sf.dataType == ByteType
@@ -59,6 +62,11 @@ object DataFrameColumns {
           .filter(
             any(isDoubleColumn, isFloatColumn, isByteColumn, isIntColumn, isLongColumn, isShortColumn, isDecimalColumn))
           .map(_.name)
+
+      def nonNumericColumns: Seq[String] = df.schema
+        .filter(
+          none(isDoubleColumn, isFloatColumn, isByteColumn, isIntColumn, isLongColumn, isShortColumn, isDecimalColumn))
+        .map(_.name)
 
       def columnsMatching(colNameRegex: String): Seq[String] = df.columns.filter(_.matches(colNameRegex))
 

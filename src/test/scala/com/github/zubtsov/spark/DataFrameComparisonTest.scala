@@ -57,4 +57,34 @@ class DataFrameComparisonTest extends SparkFunSuite {
     assert(difference.leftMissingRows.collect().toSeq == Seq(Row("str1", 1, 1.0, true)))
     assert(difference.rightMissingRows.collect().toSeq == Seq(Row("str3", 3, 3.0, true)))
   }
+
+  test("Data difference approximate") {
+    val df1 = spark.createDataFrame(
+      "string_val STRING, double_val DOUBLE, decimal_val DECIMAL(18,4)",
+      Row(         "str1",                1.1,          BigDecimal(1.1)),
+      Row(         "str2",                1.2,          BigDecimal(1.2)),
+      Row(         "str3",                1.3,          BigDecimal(1.3)),
+      Row(         "str4",                1.4,          BigDecimal(1.4)),
+      Row(         "str5",                1.5,          BigDecimal(1.5)),
+      Row(         "str6",                1.6,          BigDecimal(1.6))
+    )
+    val df2 = spark.createDataFrame(
+      "string_val STRING, double_val DOUBLE, decimal_val DECIMAL(18,4)",
+      Row(         "str1",                1.06,         BigDecimal(1.1)),
+      Row(         "str2",                1.24,         BigDecimal(1.2)),
+      Row(         "str3",                1.4,          BigDecimal(1.3)),
+      Row(         "str4",                1.4,          BigDecimal(1.36)),
+      Row(         "str5",                1.5,          BigDecimal(1.54)),
+      Row(         "str6",                1.6,          BigDecimal(1.7))
+    )
+    val difference = DataFrameComparison.getDataDifferenceApproximate(df1, df2, Seq("double_val", "decimal_val"), 0.05)
+    assert(difference.leftMissingRows.collect().toSet == Set(
+      Row(         "str3",                1.4,          new java.math.BigDecimal("1.3000")),
+      Row(         "str6",                1.6,          new java.math.BigDecimal("1.7000"))
+    ))
+    assert(difference.rightMissingRows.collect().toSet == Set(
+      Row(         "str3",                1.3,          new java.math.BigDecimal("1.3000")),
+      Row(         "str6",                1.6,          new java.math.BigDecimal("1.6000"))
+    ))
+  }
 }
