@@ -62,15 +62,19 @@ object DataFrameComparison {
     val rightMissingRows = leftProjected.exceptAll(rightProjected)
     DataDifference(leftMissingRows, rightMissingRows)
   }
-  //FIXME: how to deal with duplicates? count rows? add signature with primary key? add signature with error per column (use map)
-  def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, numericCols: Seq[String], absoluteError: Double): DataDifference = {
-    val otherCols = left.drop(numericCols:_*).columns
+  //FIXME: how to deal with duplicates? count rows? add signature with primary key?
+  def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, numericColToAbsError: Map[String, Double]): DataDifference = {
+    val otherCols = left.drop(numericColToAbsError.keys.toSeq:_*).columns
     val nonNumericColsEqual = otherCols.map(cn => left(cn) === right(cn)).reduce(_ and _)
-    val numericColsAreWithinApproxError = numericCols.map(cn => abs(left(cn) - right(cn)) < absoluteError).reduce(_ and _)
+    val numericColsAreWithinApproxError = numericColToAbsError.map(t => abs(left(t._1) - right(t._1)) <= t._2).reduce(_ and _)
     val joinCondition = nonNumericColsEqual and numericColsAreWithinApproxError
     val leftMissingRows = right.join(left, joinCondition, "left_anti")
     val rightMissingRows = left.join(right, joinCondition, "left_anti")
     DataDifference(leftMissingRows, rightMissingRows)
+  }
+
+  def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, numericCols: Seq[String], absoluteError: Double): DataDifference = {
+    getDataDifferenceApproximate(left, right, numericCols.map(cn => (cn, absoluteError)).toMap)
   }
 
   def hasEqualColumnNames(leftColumns: Seq[String], rightColumns: Seq[String], caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {

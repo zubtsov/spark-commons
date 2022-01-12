@@ -87,4 +87,40 @@ class DataFrameComparisonTest extends SparkFunSuite {
       Row(         "str6",                1.6,          new java.math.BigDecimal("1.6000"))
     ))
   }
+
+  test("Data difference approximate 2") {
+    val df1 = spark.createDataFrame(
+      "string_val STRING, double_val DOUBLE, decimal_val DECIMAL(18,4)",
+      Row(         "str1",                1.1,          BigDecimal(1.1)),
+      Row(         "str2",                1.2,          BigDecimal(1.2)),
+      Row(         "str3",                1.3,          BigDecimal(1.3)),
+      Row(         "str4",                1.4,          BigDecimal(1.4)),
+      Row(         "str5",                1.5,          BigDecimal(1.5)),
+      Row(         "str6",                1.6,          BigDecimal(1.6))
+    )
+    val df2 = spark.createDataFrame(
+      "string_val STRING, double_val DOUBLE, decimal_val DECIMAL(18,4)",
+      Row(         "str1",                1.2,         BigDecimal(1.101)),
+      Row(         "str2",                1.4,         BigDecimal(1.202)),
+      Row(         "str3",                1.6,         BigDecimal(1.303)),
+      Row(         "str4",                1.8,         BigDecimal(1.404)),
+      Row(         "str5",                2.0,         BigDecimal(1.505)),
+      Row(         "str6",                2.2,         BigDecimal(1.606))
+    )
+    val difference = DataFrameComparison.getDataDifferenceApproximate(df1, df2, Map("double_val" -> 0.6, "decimal_val" -> 0.05))
+    assert(difference.leftMissingRows.collect().toSet == Set(
+      Row(         "str6",                2.2,          new java.math.BigDecimal("1.6060"))
+    ))
+    assert(difference.rightMissingRows.collect().toSet == Set(
+      Row(         "str6",                1.6,          new java.math.BigDecimal("1.6000"))
+    ))
+
+    val difference2 = DataFrameComparison.getDataDifferenceApproximate(df1, df2, Map("double_val" -> 0.5, "decimal_val" -> 0.06))
+    assert(difference.leftMissingRows.collect().toSet == Set(
+      Row(         "str6",                2.2,          new java.math.BigDecimal("1.6060"))
+    ))
+    assert(difference.rightMissingRows.collect().toSet == Set(
+      Row(         "str6",                1.6,          new java.math.BigDecimal("1.6000"))
+    ))
+  }
 }
