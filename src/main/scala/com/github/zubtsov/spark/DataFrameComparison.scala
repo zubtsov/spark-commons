@@ -1,5 +1,6 @@
 package com.github.zubtsov.spark
 
+import com.github.zubtsov.spark.enums.JoinType
 import com.github.zubtsov.spark.exception.{DifferentColumnNamesException, DifferentDataException, DifferentSchemasException}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
@@ -68,8 +69,8 @@ object DataFrameComparison {
     val nonNumericColsEqual = joinCols.map(cn => left(cn) === right(cn)).reduce(_ and _)
     val numericColsAreWithinApproxError = numericColToAbsError.map(t => abs(left(t._1) - right(t._1)) <= t._2).reduce(_ and _)
     val joinCondition = nonNumericColsEqual and numericColsAreWithinApproxError
-    val leftMissingRows = right.join(left, joinCondition, "left_anti")
-    val rightMissingRows = left.join(right, joinCondition, "left_anti")
+    val leftMissingRows = right.join(left, joinCondition, JoinType.LeftAnti)
+    val rightMissingRows = left.join(right, joinCondition, JoinType.LeftAnti)
     DataDifference(leftMissingRows, rightMissingRows)
   }
 
