@@ -21,7 +21,7 @@ object DataFrameWithId {
       /**
        * [[DataFrameWithId.zipWithId()]]
        */
-      def zipWithId(offset: Long = 1L, idColumnName: String = "id", pos: ColumnPosition = ColumnPosition.Tail): DataFrame = {
+      def zipWithId(offset: Long = 1L, idColumnName: String = "id", pos: ColumnPosition = ColumnPosition.Last): DataFrame = {
         df.transform(DataFrameWithId.zipWithId(offset, idColumnName, pos))
       }
       /**
@@ -29,7 +29,7 @@ object DataFrameWithId {
        */
       def zipWithIndex(offset: Long = 1L,
                        idColumnName: String = "id",
-                       pos: ColumnPosition = ColumnPosition.Tail): DataFrame = {
+                       pos: ColumnPosition = ColumnPosition.Last): DataFrame = {
         df.transform(DataFrameWithId.zipWithIndex(offset, idColumnName, pos))
       }
       /**
@@ -37,7 +37,7 @@ object DataFrameWithId {
        */
       def zipWithUniqueId(offset: Long = 1L,
                           idColumnName: String = "id",
-                          pos: ColumnPosition = ColumnPosition.Tail): DataFrame = {
+                          pos: ColumnPosition = ColumnPosition.Last): DataFrame = {
         df.transform(zipWith(_.zipWithUniqueId())(offset, idColumnName, pos))
       }
     }
@@ -51,7 +51,7 @@ object DataFrameWithId {
    * @param df a table to which the identifier will be added
    * @return data frame with continuous unique identifier column
    */
-  def zipWithId(offset: Long = 1, idColumnName: String = "id", pos: ColumnPosition = ColumnPosition.Tail)(df: DataFrame): DataFrame = {
+  def zipWithId(offset: Long = 1, idColumnName: String = "id", pos: ColumnPosition = ColumnPosition.Last)(df: DataFrame): DataFrame = {
     val partitionIdColName = "_tmp_partition_id_"
     val monotonicallyIncreasingIdColName = "_tmp_monotonically_increasing_id_"
 
@@ -84,8 +84,8 @@ object DataFrameWithId {
     val idColumn = (col(partitionOffsetColName) + col(monotonicallyIncreasingIdColName)).as(idColumnName)
 
     val colsToSelect = pos match {
-      case ColumnPosition.Head => Seq(idColumn) ++ dfWithPartitionId.columns.map(col)
-      case ColumnPosition.Tail => dfWithPartitionId.columns.map(col).toSeq ++ Seq(idColumn)
+      case ColumnPosition.First => Seq(idColumn) ++ dfWithPartitionId.columns.map(col)
+      case ColumnPosition.Last => dfWithPartitionId.columns.map(col).toSeq ++ Seq(idColumn)
     }
 
     val mapPartitionIdToOffset = udf((partitionId: Int) => partitionsOffsets(partitionId)) //unfortunately, DataFrame.na.replace doesn't support Long type
@@ -106,7 +106,7 @@ object DataFrameWithId {
    */
   def zipWithIndex(offset: Long = 1L,
                    idColumnName: String = "id",
-                   pos: ColumnPosition = ColumnPosition.Tail)
+                   pos: ColumnPosition = ColumnPosition.Last)
                   (df: DataFrame): DataFrame = {
     zipWith(_.zipWithIndex())(offset, idColumnName, pos)(df)
   }
@@ -121,7 +121,7 @@ object DataFrameWithId {
    */
   def zipWithUniqueId(offset: Long = 1L,
                       idColumnName: String = "id",
-                      pos: ColumnPosition = ColumnPosition.Tail)
+                      pos: ColumnPosition = ColumnPosition.Last)
                      (df: DataFrame): DataFrame = {
     zipWith(_.zipWithUniqueId())(offset, idColumnName, pos)(df)
   }
@@ -129,13 +129,13 @@ object DataFrameWithId {
   private def zipWith(rddIdFunc: RDD[Row] => RDD[(Row, Long)])(offset: Long, idColumnName: String, pos: ColumnPosition)
                      (df: DataFrame): DataFrame = {
     val (schema, rdd) = pos match {
-      case ColumnPosition.Head => {
+      case ColumnPosition.First => {
         (
           StructType(StructField(idColumnName, LongType) +: df.schema.fields),
           rddIdFunc(df.rdd).map(tp => Row.fromSeq((tp._2 + offset) +: tp._1.toSeq))
         )
       }
-      case ColumnPosition.Tail => {
+      case ColumnPosition.Last => {
         (
           StructType(df.schema.fields :+ StructField(idColumnName, LongType)),
           rddIdFunc(df.rdd).map(tp => Row.fromSeq(tp._1.toSeq :+ (tp._2 + offset)))

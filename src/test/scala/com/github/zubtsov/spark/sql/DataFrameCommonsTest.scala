@@ -181,7 +181,7 @@ class DataFrameCommonsTest extends SparkFunSuite {
     )
     import org.apache.spark.sql.functions.lit
     import DataFrameCommons.implicits._
-    val actual = source.withColumn2("col2", lit("b"), pos = ColumnPosition.Tail)
+    val actual = source.withColumn2("col2", lit("b"), pos = ColumnPosition.Last)
 
     assertEquals(actual, expected)
   }
@@ -198,7 +198,7 @@ class DataFrameCommonsTest extends SparkFunSuite {
     )
     import org.apache.spark.sql.functions.lit
     import DataFrameCommons.implicits._
-    val actual = source.withColumn2("col2", lit("b"), pos = ColumnPosition.Head)
+    val actual = source.withColumn2("col2", lit("b"), pos = ColumnPosition.First)
 
     assertEquals(actual, expected)
   }

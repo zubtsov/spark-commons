@@ -78,7 +78,7 @@ object DataFrameCommons {
                        colName: String,
                        colValue: Column,
                        replaceIfExists: Boolean = false,
-                       pos: ColumnPosition = ColumnPosition.Tail
+                       pos: ColumnPosition = ColumnPosition.Last
                      ): DataFrame = {
         val colExists = df.columns.exists(cn => areStringsEqual(false)(cn, colName)) //withColumn is case insensitive
 
@@ -86,7 +86,7 @@ object DataFrameCommons {
           throw ColumnAlreadyExistsException(colName)
         }
 
-        if (pos == ColumnPosition.Tail) {
+        if (pos == ColumnPosition.Last) {
           df.withColumn(colName, colValue)
         } else {
           df.withColumn(colName, colValue)

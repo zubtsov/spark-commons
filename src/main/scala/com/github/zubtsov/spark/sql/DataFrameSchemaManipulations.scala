@@ -33,6 +33,7 @@ object DataFrameSchemaManipulations {
       }
 
       //TODO: get rid of boolean parameters, replace them with a case class
+      //TODO: it would be good to collect all invalid rows that can't be casted in a separate dataframe
       /**
        * Allows to cast the entire schema of the table to the target schema
        * @param targetSchema
