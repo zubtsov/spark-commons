@@ -107,7 +107,7 @@ class DataFrameComparisonTest extends SparkFunSuite {
       Row(         "str5",                2.0,         BigDecimal(1.505)),
       Row(         "str6",                2.2,         BigDecimal(1.606))
     )
-    val difference = DataFrameComparison.getDataDifferenceApproximate(df1, df2, Map("double_val" -> 0.6, "decimal_val" -> 0.05))
+    val difference = DataFrameComparison.getDataDifferenceApproximate(df1, df2, Seq("string_val"), Map("double_val" -> 0.6, "decimal_val" -> 0.05))
     assert(difference.leftMissingRows.collect().toSet == Set(
       Row(         "str6",                2.2,          new java.math.BigDecimal("1.6060"))
     ))
@@ -115,11 +115,11 @@ class DataFrameComparisonTest extends SparkFunSuite {
       Row(         "str6",                1.6,          new java.math.BigDecimal("1.6000"))
     ))
 
-    val difference2 = DataFrameComparison.getDataDifferenceApproximate(df1, df2, Map("double_val" -> 0.5, "decimal_val" -> 0.06))
-    assert(difference.leftMissingRows.collect().toSet == Set(
+    val difference2 = DataFrameComparison.getDataDifferenceApproximate(df1, df2, Seq("string_val"), Map("double_val" -> 0.5, "decimal_val" -> 0.06))
+    assert(difference2.leftMissingRows.collect().toSet == Set(
       Row(         "str6",                2.2,          new java.math.BigDecimal("1.6060"))
     ))
-    assert(difference.rightMissingRows.collect().toSet == Set(
+    assert(difference2.rightMissingRows.collect().toSet == Set(
       Row(         "str6",                1.6,          new java.math.BigDecimal("1.6000"))
     ))
   }

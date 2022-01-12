@@ -5,7 +5,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StructField, StructType}
 
-//TODO: add approximate comparison of double values with some epsilon & case insensitive string comparison
+//TODO: support case insensitive string comparison
 
 /**
  * Utility object to compare [[org.apache.spark.sql.DataFrame]]s' columns, schemas and data
@@ -62,15 +62,19 @@ object DataFrameComparison {
     val rightMissingRows = leftProjected.exceptAll(rightProjected)
     DataDifference(leftMissingRows, rightMissingRows)
   }
-  //FIXME: how to deal with duplicates? count rows? add signature with primary key?
-  def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, numericColToAbsError: Map[String, Double]): DataDifference = {
-    val otherCols = left.drop(numericColToAbsError.keys.toSeq:_*).columns
-    val nonNumericColsEqual = otherCols.map(cn => left(cn) === right(cn)).reduce(_ and _)
+  //FIXME: how to deal with duplicates? count rows?
+  def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, primaryKey: Seq[String], numericColToAbsError: Map[String, Double]): DataDifference = {
+    val joinCols = primaryKey
+    val nonNumericColsEqual = joinCols.map(cn => left(cn) === right(cn)).reduce(_ and _)
     val numericColsAreWithinApproxError = numericColToAbsError.map(t => abs(left(t._1) - right(t._1)) <= t._2).reduce(_ and _)
     val joinCondition = nonNumericColsEqual and numericColsAreWithinApproxError
     val leftMissingRows = right.join(left, joinCondition, "left_anti")
     val rightMissingRows = left.join(right, joinCondition, "left_anti")
     DataDifference(leftMissingRows, rightMissingRows)
+  }
+
+  def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, numericColToAbsError: Map[String, Double]): DataDifference = {
+    getDataDifferenceApproximate(left, right, left.drop(numericColToAbsError.keys.toSeq:_*).columns, numericColToAbsError)
   }
 
   def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, numericCols: Seq[String], absoluteError: Double): DataDifference = {
