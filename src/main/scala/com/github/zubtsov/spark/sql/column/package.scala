@@ -8,10 +8,10 @@ package object column {
   private[column] def transformString(t: Column => Column)(c: Column): Column =
     if (c.expr.resolved) {
       c.expr.dataType match {
-        case StringType => lower(trim(c))
+        case StringType => t(c)
         case _          => c
       }
     } else {
-      lower(trim(c)) //WARN: conversion to the string type may happen here
+      t(c) //WARN: conversion to the string type may happen here
     }
 }
