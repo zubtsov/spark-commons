@@ -2,7 +2,7 @@ package com.github.zubtsov.spark
 
 import com.github.zubtsov.spark.enums.JoinType
 import com.github.zubtsov.spark.exception.{DifferentColumnNamesException, DifferentDataException, DifferentSchemasException}
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StructField, StructType}
 
@@ -66,7 +66,7 @@ object DataFrameComparison {
     DataDifference(leftMissingRows, rightMissingRows)
   }
 
-  def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, primaryKey: Seq[String], numericColToAbsError: Map[String, Double]): DataDifference = {
+  def getDataDifferenceApproximate2(left: DataFrame, right: DataFrame, primaryKey: Seq[String], numericColToAbsError: Map[String, Column]): DataDifference = {
     val joinCols = primaryKey
     val nonNumericColsEqual = joinCols.map(cn => left(cn) === right(cn)).reduce(_ and _)
     val numericColsAreWithinApproxError = numericColToAbsError.map(t => abs(left(t._1) - right(t._1)) <= t._2).reduce(_ and _)
@@ -74,6 +74,10 @@ object DataFrameComparison {
     val leftMissingRows = right.join(left, joinCondition, JoinType.LeftAnti)
     val rightMissingRows = left.join(right, joinCondition, JoinType.LeftAnti)
     DataDifference(leftMissingRows, rightMissingRows)
+  }
+
+  def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, primaryKey: Seq[String], numericColToAbsError: Map[String, Double]): DataDifference = {
+    getDataDifferenceApproximate2(left, right, primaryKey, numericColToAbsError.mapValues(v => lit(v)))
   }
 
   def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, numericColToAbsError: Map[String, Double]): DataDifference = {
