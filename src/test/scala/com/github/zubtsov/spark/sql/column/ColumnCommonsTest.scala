@@ -30,4 +30,30 @@ class ColumnCommonsTest extends SparkFunSuite {
     import com.github.zubtsov.spark.DataFrameComparison._
     assertEquals(actual, expected)
   }
+
+  test("Test substring_index") {
+    val source = spark.createDataFrame(
+      "         `str_val` STRING, `str_occurrence` INT",
+      Row( "0.1.2.3.4.5.6.7.8.9",               10),
+      Row( "0.1.2.3.4.5.6.7.8.9",                8),
+      Row( "0.1.2.3.4.5.6.7.8.9",                6),
+      Row( "0.1.2.3.4.5.6.7.8.9",                4),
+      Row( "0.1.2.3.4.5.6.7.8.9",                2),
+      Row( "0.1.2.3.4.5.6.7.8.9",                1)
+    )
+    import ColumnCommons._
+    import org.apache.spark.sql.functions.{col, lit}
+    val actual = source.withColumn("str_result", substring_index(col("str_val"), lit("."), col("str_occurrence")))
+    val expected = spark.createDataFrame(
+      "        `str_val` STRING, `str_occurrence` INT,   `str_result` STRING",
+      Row("0.1.2.3.4.5.6.7.8.9",                   10, "0.1.2.3.4.5.6.7.8.9"),
+      Row("0.1.2.3.4.5.6.7.8.9",                    8,     "0.1.2.3.4.5.6.7"),
+      Row("0.1.2.3.4.5.6.7.8.9",                    6,         "0.1.2.3.4.5"),
+      Row("0.1.2.3.4.5.6.7.8.9",                    4,             "0.1.2.3"),
+      Row("0.1.2.3.4.5.6.7.8.9",                    2,                 "0.1"),
+      Row("0.1.2.3.4.5.6.7.8.9",                    1,                   "0")
+    )
+    import com.github.zubtsov.spark.DataFrameComparison._
+    assertEquals(actual, expected)
+  }
 }
