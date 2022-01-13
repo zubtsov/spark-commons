@@ -17,7 +17,7 @@ class DataFramePrinterTest extends SparkFunSuite {
     val actual = data.toScalaCode()
     println(actual)
 
-    import com.github.zubtsov.spark.Literals._
+    import com.github.zubtsov.spark.Literals.implicits._
     val printed = spark.createDataFrame(
       "         `short_col` SMALLINT, `int_col` INT,     `long_col` BIGINT, `float_col` FLOAT,     `double_col` DOUBLE, `date_col` DATE,  `timestamp_col` TIMESTAMP, `boolean_col` BOOLEAN,    `string_col` STRING, `decimal_col` DECIMAL(18,4)",
       Row(-32768.asInstanceOf[Short],   -2147483648, -9223372036854775808L,    -3.4028235E38f, -1.7976931348623157E308,   d"1970-01-01",   t"1970-01-01 03:00:00.0",                  true,         "short string",     BigDecimal(-12345.1235)),

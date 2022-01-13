@@ -6,6 +6,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StructField, StructType}
 
+//FIXME: how to deal with duplicates? group by all columns and count rows?
 //TODO: support case insensitive string comparison
 
 /**
@@ -63,7 +64,7 @@ object DataFrameComparison {
     val rightMissingRows = leftProjected.exceptAll(rightProjected)
     DataDifference(leftMissingRows, rightMissingRows)
   }
-  //FIXME: how to deal with duplicates? count rows?
+
   def getDataDifferenceApproximate(left: DataFrame, right: DataFrame, primaryKey: Seq[String], numericColToAbsError: Map[String, Double]): DataDifference = {
     val joinCols = primaryKey
     val nonNumericColsEqual = joinCols.map(cn => left(cn) === right(cn)).reduce(_ and _)

@@ -1,7 +1,7 @@
 package com.github.zubtsov.spark.sql
 
 import com.github.zubtsov.spark.SparkFunSuite
-import com.github.zubtsov.spark.Literals._
+import com.github.zubtsov.spark.Literals.implicits._
 import org.apache.spark.sql.Row
 import com.github.zubtsov.spark.DataFrameComparison._
 
