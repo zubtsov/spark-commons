@@ -3,7 +3,9 @@ package com.github.zubtsov.spark.sql.column
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.catalyst.expressions.{Expression, Substring, SubstringIndex}
 
-//todo: add more flexible signatures which are not provided out-of-box. See org.apache.spark.sql.functions object for reference
+/**
+ * More flexible signatures which are not provided out-of-box in [[org.apache.spark.sql.functions]]
+ */
 object ColumnCommons {
   private def withExpr(expr: Expression): Column = new Column(expr)
 

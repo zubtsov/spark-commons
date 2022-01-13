@@ -188,7 +188,7 @@ object DataFrameCommons {
 
       private def calculateFraction(numRows: Int): Double = {
         val tableSize = df.count().asInstanceOf[Double]
-        val extraRows = (numRows * 0.1 + 10).toInt //TODO: figure out exact minimum values to guarantee numRows size
+        val extraRows = (numRows * 0.1 + 10).toInt //unfortunately, it's unclear how (or even not possible) to guarantee numRows size
         if (numRows < tableSize - extraRows) {
           val fraction = (numRows + extraRows) / tableSize
           fraction
