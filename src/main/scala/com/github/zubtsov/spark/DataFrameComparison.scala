@@ -6,8 +6,9 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StructField, StructType}
 
-//FIXME: how to deal with duplicates? group by all columns and count rows?
+//FIXME: how to deal with duplicates in approximate methods? group by all columns and count rows?
 //TODO: support case insensitive string comparison
+//TODO: lazily cache different/same boolean values
 
 /**
  * Utility object to compare [[org.apache.spark.sql.DataFrame]]s' columns, schemas and data

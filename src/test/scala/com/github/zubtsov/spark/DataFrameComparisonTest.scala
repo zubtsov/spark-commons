@@ -123,4 +123,29 @@ class DataFrameComparisonTest extends SparkFunSuite {
       Row(         "str6",                1.6,          new java.math.BigDecimal("1.6000"))
     ))
   }
+
+  test("Data difference with duplicates") {
+    val df1 = spark.createDataFrame(
+      "string_val STRING, double_val DOUBLE, decimal_val DECIMAL(18,4)",
+      Row(         "str1",                1.1,          BigDecimal(1.1)),
+      Row(         "str2",                1.2,          BigDecimal(1.2)),
+      Row(         "str3",                1.3,          BigDecimal(1.3)),
+      Row(         "str3",                1.3,          BigDecimal(1.3)),
+      Row(         "str3",                1.3,          BigDecimal(1.3))
+    )
+
+    val df2 = spark.createDataFrame(
+      "string_val STRING, double_val DOUBLE, decimal_val DECIMAL(18,4)",
+      Row(         "str1",                1.1,          BigDecimal(1.1)),
+      Row(         "str2",                1.2,          BigDecimal(1.2)),
+      Row(         "str3",                1.3,          BigDecimal(1.3)),
+      Row(         "str3",                1.3,          BigDecimal(1.3))
+    )
+
+    val difference = DataFrameComparison.getDataDifference(df1, df2)
+    assert(difference.leftMissingRows.count() == 0)
+    assert(difference.rightMissingRows.collect.toSet == Set(
+      Row(         "str3",                1.3,          new java.math.BigDecimal("1.3000"))
+    ))
+  }
 }
