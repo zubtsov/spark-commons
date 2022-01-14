@@ -3,25 +3,37 @@ package com.github.zubtsov.spark.sql
 import com.github.zubtsov.spark.DataFrameComparison._
 import com.github.zubtsov.spark.SparkFunSuite
 import com.github.zubtsov.spark.SparkSessionCommons.implicits._
-import com.github.zubtsov.spark.exception.{DifferentColumnNamesException, UnknownColumnsException}
+import com.github.zubtsov.spark.exception.UnknownColumnsException
 import com.github.zubtsov.spark.sql.DataFrameSchemaManipulations.implicits._
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types.StructType
 //TODO: add more test cases
-//TODO: test not empty data frames
+
 class DataFrameSchemaManipulationsTest extends SparkFunSuite {
   test("Trim column names case insensitive") {
-    val source = spark.emptyDataFrame2("`col_name1 ` STRING, ` col_name2` INT, ` \tcol_name3\t  ` DOUBLE, ` do not trim ` STRING")
-    val expected = spark.emptyDataFrame2("`col_name1` STRING, `col_name2` INT, `col_name3` DOUBLE, ` do not trim ` STRING")
+    val source = spark.createDataFrame(
+      "`col_name1 ` STRING, ` col_name2` INT, ` \tcol_name3\t  ` DOUBLE, ` do not trim ` STRING",
+      Row("v1", 1, 1.0, "v2")
+    )
+    val expected = spark.createDataFrame(
+      "`col_name1` STRING, `col_name2` INT, `col_name3` DOUBLE, ` do not trim ` STRING",
+      Row("v1", 1, 1.0, "v2")
+    )
     val actual = source.withTrimmedColumnNames(Seq("col_name1", "COL_NAME2", "col_name3"), false)
-    assertEqualSchemas(expected, actual, true, true)
+    assertEquals(expected, actual, true, true)
   }
 
   test("Trim column names case sensitive") {
-    val source = spark.emptyDataFrame2("`col_name1 ` STRING, ` col_name2` INT, ` \tcol_name3\t  ` DOUBLE, ` do not trim ` STRING")
-    val expected = spark.emptyDataFrame2("`col_name1` STRING, `col_name2` INT, `col_name3` DOUBLE, ` do not trim ` STRING")
+    val source = spark.createDataFrame(
+      "`col_name1 ` STRING, ` col_name2` INT, ` \tcol_name3\t  ` DOUBLE, ` do not trim ` STRING",
+      Row("v1", 1, 1.0, "v2")
+    )
+    val expected = spark.createDataFrame(
+      "`col_name1` STRING, `col_name2` INT, `col_name3` DOUBLE, ` do not trim ` STRING",
+      Row("v1", 1, 1.0, "v2")
+    )
     val actual = source.withTrimmedColumnNames(Seq("col_name1", "col_name2", "col_name3"), true)
-    assertEqualSchemas(expected, actual, true, true)
+    assertEquals(expected, actual, true, true)
   }
 
   test("Trim column names with non-existing column case insensitive") {
@@ -35,21 +47,30 @@ class DataFrameSchemaManipulationsTest extends SparkFunSuite {
   }
 
   test("Unicode trim column names test case insensitive") {
-    val source = spark.emptyDataFrame2("`\u00a0col_name1 ` STRING, ` col_name2\u00a0` INT, ` \t\u00a0col_name3\u00a0\t  ` DOUBLE, ` do not trim ` STRING")
-    val expected = spark.emptyDataFrame2("`col_name1` STRING, `col_name2` INT, `col_name3` DOUBLE, ` do not trim ` STRING")
+    val source = spark.createDataFrame(
+      "`\u00a0col_name1 ` STRING, ` col_name2\u00a0` INT, ` \t\u00a0col_name3\u00a0\t  ` DOUBLE, ` do not trim ` STRING",
+      Row("v1", 1, 1.0, "v2")
+    )
+    val expected = spark.createDataFrame(
+      "`col_name1` STRING, `col_name2` INT, `col_name3` DOUBLE, ` do not trim ` STRING",
+      Row("v1", 1, 1.0, "v2")
+    )
     val actual = source.withUnicodeTrimmedColumnNames(Seq("col_name1", "COL_NAME2", "col_name3"), false)
-    assertEqualSchemas(expected, actual, true, true)
+    assertEquals(expected, actual, true, true)
   }
 
   test("Unicode trim column names test case sensitive") {
     val source = spark.emptyDataFrame2("`\u00a0col_name1 ` STRING, ` col_name2\u00a0` INT, ` \t\u00a0col_name3\u00a0\t  ` DOUBLE, ` do not trim ` STRING")
-    val expected = spark.emptyDataFrame2("`col_name1` STRING, ` col_name2\u00a0` INT, `col_name3` DOUBLE, ` do not trim ` STRING")
-    assertThrows[UnknownColumnsException](expected, source.withUnicodeTrimmedColumnNames(Seq("col_name1", "COL_NAME2", "col_name3"), true))
+    assertThrows[UnknownColumnsException](source.withUnicodeTrimmedColumnNames(Seq("col_name1", "COL_NAME2", "col_name3"), true))
   }
 
   test("Columns are sorted") {
-    val source = spark.emptyDataFrame2("d STRING, b STRING, a STRING, c STRING")
-    val expected = spark.emptyDataFrame2("a STRING, b STRING, c STRING, d STRING")
+    val source = spark.createDataFrame("d STRING, b STRING, a STRING, c STRING",
+      Row("d", "b", "a", "c")
+    )
+    val expected = spark.createDataFrame("a STRING, b STRING, c STRING, d STRING",
+      Row("a", "b", "c", "d")
+    )
     val actual = source.sortColumns(identity)
     assertEqualSchemas(expected, actual)
   }
