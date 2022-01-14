@@ -217,17 +217,18 @@ class DataFrameCommonsTest extends SparkFunSuite {
 
   test("Drop duplicates ignore case caseSensitive = false") {
     val source = spark.createDataFrame(
-      "    `col1` STRING, `col2` STRING",
-      Row(           "a",           "a"),
-      Row(           "A",           "b"),
-      Row(           "b",           "c"),
-      Row(           "b",           "C"),
-      Row(           "c",           "d")
+      "    `col1` STRING, `col2` STRING, `col3` INT",
+      Row(           "a",           "a",          1),
+      Row(           "A",           "b",          2),
+      Row(           "b",           "c",          3),
+      Row(           "b",           "C",          3),
+      Row(           "c",           "d",          5),
+      Row(           "c",           "d",          6)
     )
     //todo: check data using contains all/any methods for comparison
     import DataFrameCommons.implicits._
 
-    assertResult(4)(source.dropDuplicatesIgnoreCase(Seq("COL1", "COL2"), caseSensitive = false).count())
+    assertResult(5)(source.dropDuplicatesIgnoreCase(Seq("COL1", "COL2", "col3"), caseSensitive = false).count())
   }
 
   test("Drop duplicates ignore case caseSensitive = true") {
