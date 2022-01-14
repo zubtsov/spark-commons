@@ -8,6 +8,8 @@ import org.apache.spark.sql.types.{StructField, StructType}
 
 //FIXME: how to deal with duplicates in approximate methods? group by all columns and count rows?
 //TODO: support case insensitive string comparison
+//TODO: add getDataDifferenceIgnoreDuplicates with the list of columns
+//TODO: add join stats calculator to check how many rows were joined/not joined/duplicated
 
 /**
  * Utility object to compare [[org.apache.spark.sql.DataFrame]]s' columns, schemas and data
