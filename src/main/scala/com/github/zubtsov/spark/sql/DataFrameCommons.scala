@@ -138,9 +138,15 @@ object DataFrameCommons {
 
         val tmpStringColNames = stringColsWithDuplicates.map(tmpColNameMapper)
 
-        stringColsWithDuplicates.zip(tmpStringColNames).foldLeft(df)((df, t) => {
+        val oldColToTmpColName = stringColsWithDuplicates.zip(tmpStringColNames)
+        val colsForDroppingDuplicates = tmpStringColNames ++ otherColsWithDuplicates.map(_.name)
+
+        val dfWithTemporaryCols = oldColToTmpColName.foldLeft(df)((df, t) => {
           df.withColumn(t._2, lower(col(t._1.name)))
-        }).dropDuplicates(tmpStringColNames ++ otherColsWithDuplicates.map(_.name))
+        })
+
+        dfWithTemporaryCols
+          .dropDuplicates(colsForDroppingDuplicates)
           .drop(tmpStringColNames: _*)
       }
 

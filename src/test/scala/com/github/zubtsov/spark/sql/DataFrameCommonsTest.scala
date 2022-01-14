@@ -1,7 +1,7 @@
 package com.github.zubtsov.spark.sql
 
 import com.github.zubtsov.spark.DataFrameComparison._
-import com.github.zubtsov.spark.SparkFunSuite
+import com.github.zubtsov.spark.{DataFrameComparison, SparkFunSuite}
 import com.github.zubtsov.spark.SparkSessionCommons.implicits._
 import com.github.zubtsov.spark.enums.{ColumnPosition, UnionStrategy}
 import com.github.zubtsov.spark.exception.ColumnAlreadyExistsException
@@ -225,10 +225,15 @@ class DataFrameCommonsTest extends SparkFunSuite {
       Row(           "c",           "d",          5),
       Row(           "c",           "d",          6)
     )
-    //todo: check data using contains all/any methods for comparison
-    import DataFrameCommons.implicits._
 
-    assertResult(5)(source.dropDuplicatesIgnoreCase(Seq("COL1", "COL2", "col3"), caseSensitive = false).count())
+    import DataFrameCommons.implicits._
+    val actual = source.dropDuplicatesIgnoreCase(Seq("COL1", "COL2", "col3"), caseSensitive = false)
+    assertResult(5)(actual.count())
+
+    //FIXME: uncomment, doesn't work because of Spark bug?
+//    val difference = DataFrameComparison.getDataDifference(source, actual)
+//    assert(difference.leftMissingRows.isEmpty)
+//    assert(difference.rightMissingRows.count() == 1)
   }
 
   test("Drop duplicates ignore case caseSensitive = true") {
@@ -240,10 +245,15 @@ class DataFrameCommonsTest extends SparkFunSuite {
       Row(           "b",           "C"),
       Row(           "c",           "d")
     )
-    //todo: check data using contains all/any methods for comparison
-    import DataFrameCommons.implicits._
 
-    assertResult(3)(source.dropDuplicatesIgnoreCase(Seq("col1", "COL2"), caseSensitive = true).count())
+    import DataFrameCommons.implicits._
+    val actual = source.dropDuplicatesIgnoreCase(Seq("col1", "COL2"), caseSensitive = true)
+    assertResult(3)(actual.count())
+
+    //FIXME: uncomment, doesn't work because of Spark bug?
+//    val difference = DataFrameComparison.getDataDifference(source, actual)
+//    assert(difference.leftMissingRows.isEmpty)
+//    assert(difference.rightMissingRows.count() == 1)
   }
 
 
