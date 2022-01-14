@@ -3,7 +3,7 @@ package com.github.zubtsov.spark
 import org.apache.spark.sql.Row
 
 class DataFramePrinterTest extends SparkFunSuite {
-  test("A generated_unique_id column should be added with unique values starting from offset") {
+  test("Data frame is printed as valid Scala code") {
     import com.github.zubtsov.spark.SparkSessionCommons.implicits._
     val data = spark.createDataFrame(
       "short_col short, int_col int, long_col long, float_col float, double_col double, date_col date, timestamp_col timestamp, boolean_col boolean, string_col string, decimal_col decimal(18,4)",

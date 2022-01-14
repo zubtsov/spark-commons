@@ -6,6 +6,7 @@ import com.github.zubtsov.spark.enums.{ColumnPosition, UnionStrategy}
 import com.github.zubtsov.spark.exception.ColumnAlreadyExistsException
 import com.github.zubtsov.spark.{areStringsEqual, defaultCaseSensitivity}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{StringType, StructField}
 import org.apache.spark.sql.{Column, DataFrame}
 
 /**
@@ -129,14 +130,18 @@ object DataFrameCommons {
        */
       def dropDuplicatesIgnoreCase(columns: Seq[String] = df.columns,
                                    caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
-        val colNamesProperCase = columns.flatMap(cn1 => df.columns.find(cn2 => areStringsEqual(caseSensitive)(cn1, cn2)))
-        val mapFunc: String => String = cn => cn + cn.hashCode
-        val tmpColNames = colNamesProperCase.map(mapFunc)
+        //TODO: should we throw an exception when column is not found or quietly skip it or remove the case sensitivity parameter?
+        val columnsWithDuplicates = df.schema.filter(t => columns.exists(cn => areStringsEqual(caseSensitive)(t.name, cn)))
 
-        colNamesProperCase.zip(tmpColNames).foldLeft(df)((df, t) => {
-          df.withColumn(t._2, lower(col(t._1))) //TODO: avoid doing it for non-string columns, use stringColumns function
-        }).dropDuplicates(tmpColNames)
-          .drop(tmpColNames: _*)
+        val tmpColNameMapper: StructField => String = sf => sf.name + sf.name.hashCode
+        val (stringColsWithDuplicates, otherColsWithDuplicates) = columnsWithDuplicates.partition(sf => sf.dataType == StringType)
+
+        val tmpStringColNames = stringColsWithDuplicates.map(tmpColNameMapper)
+
+        stringColsWithDuplicates.zip(tmpStringColNames).foldLeft(df)((df, t) => {
+          df.withColumn(t._2, lower(col(t._1.name)))
+        }).dropDuplicates(tmpStringColNames ++ otherColsWithDuplicates.map(_.name))
+          .drop(tmpStringColNames: _*)
       }
 
       /**

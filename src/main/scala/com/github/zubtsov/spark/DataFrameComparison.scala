@@ -8,34 +8,33 @@ import org.apache.spark.sql.types.{StructField, StructType}
 
 //FIXME: how to deal with duplicates in approximate methods? group by all columns and count rows?
 //TODO: support case insensitive string comparison
-//TODO: lazily cache different/same boolean values
 
 /**
  * Utility object to compare [[org.apache.spark.sql.DataFrame]]s' columns, schemas and data
  */
 object DataFrameComparison {
   final case class ColumnNamesDifference(leftMissingCols: Seq[String], rightMissingCols: Seq[String]) {
-    def isDifferent(): Boolean = leftMissingCols.nonEmpty || rightMissingCols.nonEmpty
+    lazy val isDifferent: Boolean = leftMissingCols.nonEmpty || rightMissingCols.nonEmpty
 
-    def isTheSame(): Boolean = !isDifferent()
+    def isTheSame: Boolean = !isDifferent
 
     override def toString: String = s"Missing columns from the left: ${leftMissingCols.mkString(", ")}" +
       s"\nMissing columns from the right: ${rightMissingCols.mkString(", ")}"
   }
 
   final case class SchemaDifference(leftMissingFields: Seq[StructField], rightMissingFields: Seq[StructField]) {
-    def isDifferent(): Boolean = leftMissingFields.nonEmpty || rightMissingFields.nonEmpty
+    lazy val isDifferent: Boolean = leftMissingFields.nonEmpty || rightMissingFields.nonEmpty
 
-    def isTheSame(): Boolean = !isDifferent()
+    def isTheSame: Boolean = !isDifferent
 
     override def toString: String = s"Missing columns from the left: ${StructType(leftMissingFields).toDDL}" +
       s"\nMissing columns from the right: ${StructType(rightMissingFields).toDDL}"
   }
 
   final case class DataDifference(leftMissingRows: DataFrame, rightMissingRows: DataFrame) { //TODO: case class probably doesn't make much sense here
-    def isDifferent(): Boolean = !leftMissingRows.isEmpty || !rightMissingRows.isEmpty
+    lazy val isDifferent: Boolean = !leftMissingRows.isEmpty || !rightMissingRows.isEmpty
 
-    def isTheSame(): Boolean = !isDifferent()
+    def isTheSame: Boolean = !isDifferent
 
     override def toString: String = s"The number of missing rows from the left: ${leftMissingRows.count()}" +
       s"\nThe number of missing rows from the right: ${rightMissingRows.count()}"
@@ -89,46 +88,46 @@ object DataFrameComparison {
   }
 
   def hasEqualColumnNames(leftColumns: Seq[String], rightColumns: Seq[String], caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
-    getColumnNamesDifference(leftColumns, rightColumns, caseSensitive).isTheSame()
+    getColumnNamesDifference(leftColumns, rightColumns, caseSensitive).isTheSame
   }
 
   def hasDifferentColumnNames(leftColumns: Seq[String], rightColumns: Seq[String], caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
-    getColumnNamesDifference(leftColumns, rightColumns, caseSensitive).isDifferent()
+    getColumnNamesDifference(leftColumns, rightColumns, caseSensitive).isDifferent
   }
 
   def hasEqualSchemas(left: DataFrame, right: DataFrame, ignoreNullability: Boolean = true, caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
-    getSchemaDifference(left.schema, right.schema, ignoreNullability, caseSensitive).isTheSame()
+    getSchemaDifference(left.schema, right.schema, ignoreNullability, caseSensitive).isTheSame
   }
 
   def hasDifferentSchemas(left: DataFrame, right: DataFrame, ignoreNullability: Boolean = true, caseSensitive: Boolean = defaultCaseSensitivity): Boolean = {
-    getSchemaDifference(left.schema, right.schema, ignoreNullability, caseSensitive).isDifferent()
+    getSchemaDifference(left.schema, right.schema, ignoreNullability, caseSensitive).isDifferent
   }
 
   def hasEqualData(left: DataFrame, right: DataFrame): Boolean = {
-    getDataDifference(left, right).isTheSame()
+    getDataDifference(left, right).isTheSame
   }
 
   def hasDifferentData(left: DataFrame, right: DataFrame): Boolean = {
-    getDataDifference(left, right).isDifferent()
+    getDataDifference(left, right).isDifferent
   }
 
   def assertEqualColumnNames(left: DataFrame, right: DataFrame, caseSensitive: Boolean = defaultCaseSensitivity): Unit = {
     val columnNamesDifference = getColumnNamesDifference(left.columns, right.columns, caseSensitive)
-    if (columnNamesDifference.isDifferent()) {
+    if (columnNamesDifference.isDifferent) {
       throw DifferentColumnNamesException(columnNamesDifference)
     }
   }
 
   def assertEqualSchemas(left: DataFrame, right: DataFrame, ignoreNullability: Boolean = true, caseSensitive: Boolean = defaultCaseSensitivity): Unit = {
     val schemaDifference = getSchemaDifference(left.schema, right.schema, ignoreNullability, caseSensitive)
-    if (schemaDifference.isDifferent()) {
+    if (schemaDifference.isDifferent) {
       throw DifferentSchemasException(schemaDifference)
     }
   }
 
   def assertEqualData(left: DataFrame, right: DataFrame): Unit = {
     val dataDifference = getDataDifference(left, right)
-    if (dataDifference.isDifferent()) {
+    if (dataDifference.isDifferent) {
       throw DifferentDataException(dataDifference)
     }
   }

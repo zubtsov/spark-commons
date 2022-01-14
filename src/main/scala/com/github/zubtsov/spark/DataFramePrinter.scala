@@ -4,7 +4,8 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row}
 
 /**
- * Utility class for printing [[org.apache.spark.sql.DataFrame]]
+ * Utility class for printing [[org.apache.spark.sql.DataFrame]].
+ * Ideally, it should be replaced with some Scala formatter + rules, but it seems very complicated (if possible).
  */
 object DataFramePrinter {
   object implicits {
