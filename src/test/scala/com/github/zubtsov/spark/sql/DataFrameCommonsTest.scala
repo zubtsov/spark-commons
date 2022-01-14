@@ -230,10 +230,11 @@ class DataFrameCommonsTest extends SparkFunSuite {
     val actual = source.dropDuplicatesIgnoreCase(Seq("COL1", "COL2", "col3"), caseSensitive = false)
     assertResult(5)(actual.count())
 
-    //FIXME: uncomment, doesn't work because of Spark bug?
-//    val difference = DataFrameComparison.getDataDifference(source, actual)
-//    assert(difference.leftMissingRows.isEmpty)
-//    assert(difference.rightMissingRows.count() == 1)
+    actual.cache() //FIXME: workaround because of Spark bug, find or report it
+
+    val difference = DataFrameComparison.getDataDifference(source, actual)
+    assert(difference.leftMissingRows.isEmpty)
+    assert(difference.rightMissingRows.count() == 1)
   }
 
   test("Drop duplicates ignore case caseSensitive = true") {
@@ -250,11 +251,11 @@ class DataFrameCommonsTest extends SparkFunSuite {
     val actual = source.dropDuplicatesIgnoreCase(Seq("col1", "COL2"), caseSensitive = true)
     assertResult(3)(actual.count())
 
-    //FIXME: uncomment, doesn't work because of Spark bug?
-//    val difference = DataFrameComparison.getDataDifference(source, actual)
-//    assert(difference.leftMissingRows.isEmpty)
-//    assert(difference.rightMissingRows.count() == 1)
-  }
+    actual.cache() //FIXME: workaround because of Spark bug, find or report it
 
+    val difference = DataFrameComparison.getDataDifference(source, actual)
+    assert(difference.leftMissingRows.isEmpty)
+    assert(difference.rightMissingRows.count() == 2)
+  }
 
 }
