@@ -7,7 +7,6 @@ import com.github.zubtsov.spark.exception.UnknownColumnsException
 import com.github.zubtsov.spark.sql.DataFrameSchemaManipulations.implicits._
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types.StructType
-//TODO: add more test cases
 
 class DataFrameSchemaManipulationsTest extends SparkFunSuite {
   test("Trim column names case insensitive") {
