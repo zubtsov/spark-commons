@@ -33,4 +33,13 @@ class DateDimensionTest extends SparkFunSuite {
     assertResult(new java.sql.Date(1609448400000L))(result.select(min("full_date")).as[java.sql.Date].first())
     assertResult(new java.sql.Date(1640898000000L))(result.select(max("full_date")).as[java.sql.Date].first())
   }
+
+  test("Date dimension Scala & SQL implementations are the same") {
+    val query = scala.io.Source.fromResource("date_dimension.sql").mkString
+    val sqlResult = spark.sql(query)
+    val scalaResult = new DateDimension().produce("2021-01-01", "2022-01-01")
+
+    import com.github.zubtsov.spark.DataFrameComparison._
+    assertEqualData(sqlResult, scalaResult)
+  }
 }
