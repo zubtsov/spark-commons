@@ -58,6 +58,8 @@ class DateDimension(private val dateFormat: DateFormat = new SimpleDateFormat(IS
       .withColumn("month_name_short", date_format(col(DateColName), "MMM"))
       .withColumn("month_name", date_format(col(DateColName), "MMMM"))
       .withColumn("quarter_name", concat(lit("Q"), quarter(col(DateColName))))
+      .withColumn("half_year", when(month(col(DateColName)) <= 6, 1).otherwise(2))
+      .withColumn("half_year_name", concat(lit("H"), when(month(col(DateColName)) <= 6, 1).otherwise(2)))
 
       .withColumn("calendar_year", year(col(DateColName)))
       .withColumn("calendar_quarter", quarter(col(DateColName)))

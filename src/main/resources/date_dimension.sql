@@ -44,7 +44,15 @@ date_dimension AS (
         QUARTER(full_date) AS calendar_quarter,
         MONTH(full_date) AS calendar_month,
         CONCAT(YEAR(full_date), '-', QUARTER(full_date)) AS calendar_year_quarter,
-        CONCAT(YEAR(full_date), '-', LPAD(MONTH(full_date), 2, '0')) AS calendar_year_month
+        CONCAT(YEAR(full_date), '-', LPAD(MONTH(full_date), 2, '0')) AS calendar_year_month,
+        CASE
+           WHEN MONTH(full_date) <= 6 THEN 1
+           ELSE 2
+        END AS half_year,
+        CASE
+           WHEN MONTH(full_date) <= 6 THEN 'H1'
+           ELSE 'H2'
+        END AS half_year_name
     FROM date_sequence
 )
 SELECT * FROM date_dimension
