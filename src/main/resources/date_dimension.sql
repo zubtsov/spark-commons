@@ -52,7 +52,13 @@ date_dimension AS (
         CASE
            WHEN MONTH(full_date) <= 6 THEN 'H1'
            ELSE 'H2'
-        END AS half_year_name
+        END AS half_year_name,
+        --TODO: add ... as iso_week, --check out: https://docs.microsoft.com/en-us/sql/t-sql/functions/datepart-transact-sql?view=sql-server-ver15#arguments (iso_week item)
+        CONCAT_WS('-',
+            YEAR(DATE_ADD(full_date, 4 - (DAYOFWEEK(full_date) + 5) % 7 + 1)),
+            LPAD(WEEKOFYEAR(full_date), 3, "W0"),
+            (DAYOFWEEK(full_date) + 5) % 7 + 1
+        ) AS iso_week_name
     FROM date_sequence
 )
 SELECT * FROM date_dimension

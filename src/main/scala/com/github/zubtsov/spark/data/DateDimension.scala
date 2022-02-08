@@ -48,6 +48,11 @@ class DateDimension(private val dateFormat: DateFormat = new SimpleDateFormat(IS
       .withColumn("day_of_month", dayofmonth(col(DateColName)))
       .withColumn("day_of_year", dayofyear(col(DateColName)))
       .withColumn("week_of_year", weekofyear(col(DateColName)))
+      .withColumn("iso_week_name", concat_ws("-",
+        year(date_add(col(DateColName), - (dayofweek(col(DateColName)) + 5) % 7 + 4 + 1)),
+        lpad(weekofyear(col(DateColName)), 3, "W0"),
+        (dayofweek(col(DateColName)) + 5) % 7 + 1
+      ))
 
       .withColumn("first_day_of_year_date", date_trunc(DateColName, lit("YEAR")))
       .withColumn("is_first_day_of_year", date_trunc(DateColName, lit("YEAR")) === col(DateColName))
