@@ -58,6 +58,8 @@ class DateDimension(private val dateFormat: DateFormat = new SimpleDateFormat(IS
       .withColumn("is_first_day_of_year", date_trunc(DateColName, lit("YEAR")) === col(DateColName))
       .withColumn("first_day_of_month_date", date_trunc(DateColName, lit("MM")))
       .withColumn("is_first_day_of_month", date_trunc(DateColName, lit("MM")) === col(DateColName))
+      .withColumn("first_day_of_quarter_date", date_trunc(DateColName, lit("QUARTER")))
+      .withColumn("is_first_day_of_quarter", date_trunc(DateColName, lit("QUARTER")) === col(DateColName))
       .withColumn("last_day_of_month_date", last_day(col(DateColName)))
       .withColumn("is_last_day_of_month", col("last_day_of_month_date") === col(DateColName))
 

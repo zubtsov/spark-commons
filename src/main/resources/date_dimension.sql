@@ -37,6 +37,8 @@ date_dimension AS (
         DATE_TRUNC(full_date, 'YEAR') = full_date AS is_first_day_of_year,
         DATE_TRUNC(full_date, 'MM') AS first_day_of_month_date,
         DATE_TRUNC(full_date, 'MM') = full_date AS is_first_day_of_month,
+        DATE_TRUNC(full_date, 'QUARTER') AS first_day_of_quarter_date,
+        DATE_TRUNC(full_date, 'QUARTER') = full_date AS is_first_day_of_quarter,
         LAST_DAY(full_date) AS last_day_of_month_date,
         LAST_DAY(full_date) = full_date AS is_last_day_of_month,
         DATE_FORMAT(full_date, 'MMM') AS month_name_short,
