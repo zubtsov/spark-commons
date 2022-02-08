@@ -10,7 +10,7 @@ import java.text.{DateFormat, SimpleDateFormat}
 import java.util.concurrent.TimeUnit
 
 //TODO: add separate method with fiscal_month_of_year,fiscal_quarter,fiscal_year,fiscal_year_month,fiscal_year_qtr columns
-
+//TODO: add last_day_of_quarter_date, last_day_of_year_date, is_last_day_of_quarter, is_last_day_of_year
 /**
  * Utility class for producing date dimension tables
  * @param dateFormat the format in which start and end dates are specified
