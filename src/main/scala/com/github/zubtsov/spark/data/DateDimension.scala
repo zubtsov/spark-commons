@@ -49,6 +49,9 @@ class DateDimension(private val dateFormat: DateFormat = new SimpleDateFormat(IS
       .withColumn("day_of_year", dayofyear(col(DateColName)))
       .withColumn("week_of_year", weekofyear(col(DateColName)))
 
+      .withColumn("first_day_of_year_date", date_trunc(DateColName, lit("YEAR")))
+      .withColumn("is_first_day_of_year", date_trunc(DateColName, lit("YEAR")) === col(DateColName))
+
       .withColumn("last_day_of_month_date", last_day(col(DateColName)))
       .withColumn("is_last_day_of_month", col("last_day_of_month_date") === col(DateColName))
 

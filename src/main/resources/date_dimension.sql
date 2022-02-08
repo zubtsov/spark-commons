@@ -33,6 +33,8 @@ date_dimension AS (
         DAYOFMONTH(full_date) AS day_of_month,
         DAYOFYEAR(full_date) AS day_of_year,
         WEEKOFYEAR(full_date) AS week_of_year,
+        DATE_TRUNC(full_date, 'YEAR') AS first_day_of_year_date,
+        DATE_TRUNC(full_date, 'YEAR') = full_date AS is_first_day_of_year,
         LAST_DAY(full_date) AS last_day_of_month_date,
         LAST_DAY(full_date) = full_date AS is_last_day_of_month,
         DATE_FORMAT(full_date, 'MMM') AS month_name_short,
