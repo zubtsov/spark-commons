@@ -1,7 +1,7 @@
 package com.github.zubtsov.spark
 
 import com.github.zubtsov.spark.enums.JoinType
-import com.github.zubtsov.spark.exception.{DifferentColumnNamesException, DifferentDataException, DifferentSchemasException}
+import com.github.zubtsov.spark.exception.{DifferentColumnNamesException, DifferentDataException, DifferentSchemasException, EmptyRowException}
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StructField, StructType}
@@ -40,6 +40,69 @@ object DataFrameComparison {
 
     override def toString: String = s"The number of missing rows from the left: ${leftMissingRows.count()}" +
       s"\nThe number of missing rows from the right: ${rightMissingRows.count()}"
+  }
+
+  final case class JoinStatistics(
+                                   leftJoinedRowsNumber: Long,
+                                   leftNotJoinedRowsNumber: Long,
+                                   leftDuplicatedRowsNumber: Long,
+                                   rightJoinedRowsNumber: Long,
+                                   rightNotJoinedRowsNumber: Long,
+                                   rightDuplicatedRowsNumber: Long,
+                                   leftJoinedRows: DataFrame,
+                                   leftDuplicatedRows: DataFrame,
+                                   rightJoinedRows: DataFrame,
+                                   rightDuplicatedRows: DataFrame
+                                 ){
+    override def toString: String = s"The left dataframe has $leftJoinedRowsNumber joined rows,\n" +
+      s"also the dataframe has $leftNotJoinedRowsNumber not joined rows\n" +
+      s"and the dataframe has $leftDuplicatedRowsNumber duplicated rows.\n" +
+      s"The right dataframe has $rightJoinedRowsNumber joined rows,\n" +
+      s"also the dataframe has $rightNotJoinedRowsNumber not joined rows\n" +
+      s"and the dataframe has $rightDuplicatedRowsNumber duplicated rows.\n"
+  }
+
+  def getJoinStatistics(left: DataFrame, right: DataFrame, joinCondition: Column): JoinStatistics = {
+    val hasNullRowsLeft = hasNullRow(left)
+    val hasNullRowsRight = hasNullRow(right)
+    if(hasNullRowsLeft || hasNullRowsRight){
+      throw new EmptyRowException(hasNullRowsLeft, hasNullRowsRight)
+    }else{
+      collectStatistics(left, right, joinCondition)
+    }
+  }
+
+  private def collectStatistics( left:DataFrame,right: DataFrame, joinCondition: Column): JoinStatistics ={
+    def atLeastOneColIsNotNull(data: DataFrame) =  data.columns.map(data(_).isNotNull).reduce(_ or _)
+    val leftSchema = left.schema.map(_.name)
+    val rightSchema = right.schema.map(_.name)
+    val joinedData = left.join(right, joinCondition, "full")
+    val joinedDataLeft = joinedData.where(atLeastOneColIsNotNull(left))
+    val joinedDataRight = joinedData.where(atLeastOneColIsNotNull(right))
+    val numberOfDuplicatedRowsLeft = joinedDataLeft.count() - left.count()
+    val numberOfDuplicatedRowsRight = joinedDataRight.count() - right.count()
+    val onlyJoinedRowsLeft = joinedDataLeft.where(atLeastOneColIsNotNull(right)).select(leftSchema.map(left(_)): _*)
+    val onlyJoinedRowsRight = joinedDataRight.where(atLeastOneColIsNotNull(left)).select(rightSchema.map(right(_)): _*)
+    val numberOfJoinedRowsLeft = onlyJoinedRowsLeft.count() - numberOfDuplicatedRowsLeft
+    val numberOfJoinedRowsRight = onlyJoinedRowsRight.count() - numberOfDuplicatedRowsRight
+    val numberOfNotJoinedRowsLeft = joinedDataLeft.count() - (numberOfJoinedRowsLeft + numberOfDuplicatedRowsLeft)
+    val numberOfNotJoinedRowsRight = joinedDataRight.count() - (numberOfJoinedRowsRight + numberOfDuplicatedRowsRight)
+    val duplicatedRowsLeft =  onlyJoinedRowsLeft.exceptAll(left)
+    val duplicatedRowsRight = onlyJoinedRowsRight.exceptAll(right)
+    val joinedRowsWithoutDupsLeft = left.join(onlyJoinedRowsLeft, leftSchema, "semi")
+    val joinedRowsWithoutDupsRight = right.join(onlyJoinedRowsRight, rightSchema, "semi")
+    JoinStatistics(
+      numberOfJoinedRowsLeft,
+      numberOfNotJoinedRowsLeft,
+      numberOfDuplicatedRowsLeft,
+      numberOfJoinedRowsRight,
+      numberOfNotJoinedRowsRight,
+      numberOfDuplicatedRowsRight,
+      joinedRowsWithoutDupsLeft,
+      duplicatedRowsLeft,
+      joinedRowsWithoutDupsRight,
+      duplicatedRowsRight
+    )
   }
 
   def getColumnNamesDifference(leftColumns: Seq[String], rightColumns: Seq[String], caseSensitive: Boolean = defaultCaseSensitivity): ColumnNamesDifference = {
@@ -139,4 +202,9 @@ object DataFrameComparison {
     assertEqualSchemas(left, right, ignoreNullability, caseSensitive)
     assertEqualData(left, right)
   }
+
+  private def hasNullRow(data: DataFrame): Boolean = {
+    !data.where(data.columns.map(col(_).isNull).reduce(_ and _)).isEmpty
+  }
 }
+
