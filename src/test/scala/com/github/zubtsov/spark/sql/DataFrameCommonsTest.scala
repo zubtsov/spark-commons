@@ -36,9 +36,9 @@ class DataFrameCommonsTest extends SparkFunSuite {
       Row(       "Carrots",             4,           "Country4",           "C4")
     )
     import DataFrameCommons.implicits._
-    val actual = source.unpivot(Seq("Country1", "Country2", "Country3", "COUNTRY4"), "CountryName", "Value", caseSensitive = false)
+    val actual = source.unpivot2(Seq("Country1", "Country2", "Country3", "COUNTRY4"), "CountryName", "Value", caseSensitive = false)
     assertEquals(expected, actual)
-    val actual2 = source.unpivot2(Seq("Country1", "Country2", "Country3", "COUNTRY4"), "CountryName", "Value", caseSensitive = false)
+    val actual2 = source.unpivot3(Seq("Country1", "Country2", "Country3", "COUNTRY4"), "CountryName", "Value", caseSensitive = false)
     assertEquals(expected, actual2)
   }
 
@@ -66,9 +66,9 @@ class DataFrameCommonsTest extends SparkFunSuite {
       Row(       "Carrots",             4,           "Country3",           "C3",               "C4"),
     )
     import DataFrameCommons.implicits._
-    val actual = source.unpivot(Seq("Country1", "Country2", "Country3", "COUNTRY4"), "CountryName", "Value", caseSensitive = true)
+    val actual = source.unpivot2(Seq("Country1", "Country2", "Country3", "COUNTRY4"), "CountryName", "Value", caseSensitive = true)
     assertEquals(expected, actual)
-    val actual2 = source.unpivot2(Seq("Country1", "Country2", "Country3", "COUNTRY4"), "CountryName", "Value", caseSensitive = true)
+    val actual2 = source.unpivot3(Seq("Country1", "Country2", "Country3", "COUNTRY4"), "CountryName", "Value", caseSensitive = true)
     assertEquals(expected, actual2)
   }
 

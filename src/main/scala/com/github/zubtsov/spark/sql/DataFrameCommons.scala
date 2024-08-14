@@ -159,7 +159,7 @@ object DataFrameCommons {
        * @param caseSensitive
        * @return
        */
-      def unpivot(columns: Seq[String],
+      def unpivot2(columns: Seq[String],
                   nameColumn: String = "name",
                   valueColumn: String = "value",
                   caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {
@@ -180,7 +180,7 @@ object DataFrameCommons {
        * @param caseSensitive
        * @return
        */
-      def unpivot2(columns: Seq[String],
+      def unpivot3(columns: Seq[String],
                   nameColumn: String = "name",
                   valueColumn: String = "value",
                   caseSensitive: Boolean = defaultCaseSensitivity): DataFrame = {

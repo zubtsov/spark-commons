@@ -1,8 +1,8 @@
 WITH
 dates AS (
     SELECT
-        '2021-01-01' AS start_date,
-        '2022-01-01' AS end_date
+        :startDate AS start_date,
+        :endDate AS end_date
 ),
 start_date_with_days_count AS (
     SELECT

@@ -7,6 +7,7 @@ import org.scalatest.funsuite.AnyFunSuite
 class SparkFunSuite extends AnyFunSuite {
   protected val ss = SparkSession
     .builder()
+    .config("spark.driver.host", "localhost")
     .master("local[*]")
 
   protected val spark = ss
