@@ -232,7 +232,7 @@ class DataFrameCommonsTest extends SparkFunSuite {
 
     actual.cache() //FIXME: workaround because of Spark bug, find or report it
 
-    val difference = DataFrameComparison.getDataDifference(source, actual)
+    val difference = DataFrameComparison.DataDifference.get(source, actual)
     assert(difference.leftMissingRows.isEmpty)
     assert(difference.rightMissingRows.count() == 1)
   }
@@ -253,7 +253,7 @@ class DataFrameCommonsTest extends SparkFunSuite {
 
     actual.cache() //FIXME: workaround because of Spark bug, find or report it
 
-    val difference = DataFrameComparison.getDataDifference(source, actual)
+    val difference = DataFrameComparison.DataDifference.get(source, actual)
     assert(difference.leftMissingRows.isEmpty)
     assert(difference.rightMissingRows.count() == 2)
   }
